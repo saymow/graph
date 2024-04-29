@@ -1,7 +1,13 @@
 import * as creator from "./creator.mjs";
 import * as draw from "./draw.mjs";
 import * as search from "./search.mjs";
-import { NODE_TYPE, NODE_STATUS, RUN_EVENT_TYPE } from "./constants.mjs";
+import { computePathDistance } from "./utils.mjs";
+import {
+  LOCAL_STORAGE_KEY,
+  NODE_TYPE,
+  NODE_STATUS,
+  RUN_EVENT_TYPE,
+} from "./constants.mjs";
 
 const container_el = document.querySelector("#app");
 const save_btn_el = document.querySelector("#save-btn");
@@ -11,16 +17,25 @@ const canvas_el = document.querySelector("canvas");
 const algorithms_modal_container = document.querySelector(
   "#algorithm-modal-container"
 );
+const result_modal_container = document.querySelector(
+  "#result-modal-container"
+);
 const ctx = canvas_el.getContext("2d");
-
-const LOCAL_STORAGE_KEY = "@GRAPH";
-
-let nodes = [];
-let matrix = [];
 
 const nodesSubject = new rxjs.Subject();
 const edgesSubject = new rxjs.Subject();
 const runSubject = new rxjs.Subject();
+
+let nodes = [];
+let matrix = [];
+let origin_node;
+let is_run_mode = false;
+let algorithm;
+
+function setUpCanvas() {
+  canvas_el.width = canvas_el.clientWidth;
+  canvas_el.height = canvas_el.clientHeight;
+}
 
 function load(config) {
   nodes = config.nodes;
@@ -45,11 +60,10 @@ function paint() {
 }
 
 nodesSubject.subscribe((node) => creator.addNode(matrix, nodes, node));
-nodesSubject.subscribe(() => paint());
 edgesSubject.subscribe((edge) => creator.addEdge(matrix, edge));
+nodesSubject.subscribe(() => paint());
 edgesSubject.subscribe((edge) => {
   const [originNode, targetNode] = [nodes[edge[0]], nodes[edge[1]]];
-
   draw.drawEdge(ctx, originNode, targetNode);
 });
 
@@ -72,24 +86,13 @@ runSubject
       else if (status === NODE_STATUS.FOUND)
         draw.drawFoundNode(ctx, nodes, node);
       else if (status === NODE_STATUS.PATH) draw.drawPathNode(ctx, nodes, node);
-    } else {
+    } else if (type === RUN_EVENT_TYPE.EDGE) {
       const { originNode, targetNode } = payload;
       draw.drawHighlightedEdge(ctx, originNode, targetNode);
+    } else {
+      handleOpenResultModel(payload.path);
     }
   });
-
-function setUpCanvas() {
-  canvas_el.width = canvas_el.clientWidth;
-  canvas_el.height = canvas_el.clientHeight;
-}
-
-function emitAddNode(type, pos) {
-  nodesSubject.next({ type, pos });
-}
-
-function emitAddEdge(edge) {
-  edgesSubject.next(edge);
-}
 
 function handleCreatorMode(e) {
   const pos = [e.x, e.y];
@@ -106,7 +109,7 @@ function handleCreatorMode(e) {
     } else {
       const target_node = node;
 
-      emitAddEdge([origin_node, target_node]);
+      edgesSubject.next([origin_node, target_node]);
       origin_node = null;
     }
   } else {
@@ -119,7 +122,7 @@ function handleCreatorMode(e) {
 
     const type = e.altKey ? NODE_TYPE.FINAL : NODE_TYPE.NORMAL;
 
-    emitAddNode(type, pos);
+    nodesSubject.next({ type, pos });
   }
 }
 
@@ -177,11 +180,52 @@ function handleRunMode(e) {
       });
     }
   }
+
+  runSubject.next({ type: RUN_EVENT_TYPE.END, payload: { path } });
 }
 
-let origin_node;
-let is_run_mode = false;
-let algorithm;
+function closeAlgorithmsModal() {
+  algorithms_modal_container.classList.remove("open");
+
+  window.removeEventListener("click", closeAlgorithmsModal);
+  algorithms_modal_container.querySelectorAll("button").forEach((btn) => {
+    btn.removeEventListener("click", handleSelectAlgorithm);
+  });
+}
+
+function handleSelectAlgorithm(e) {
+  is_run_mode = true;
+  const algorithmName = e.target.getAttribute("data-id");
+  algorithm = search.makeAlgorithm(algorithmName);
+}
+
+function handleCloseResultsModel() {
+  origin_node = null;
+  is_run_mode = false;
+  
+  paint();
+  
+  result_modal_container.classList.remove("open");
+  result_modal_container
+    .querySelector('button[data-id="continue"]')
+    .removeEventListener("click", handleCloseResultsModel);
+}
+
+function handleOpenResultModel(path) {
+  const nodes_path = path.map((nodeIdx) => nodes[nodeIdx]);
+  const nodes_count = path.length - 1;
+  const distance = computePathDistance(nodes_path).toFixed(2);
+
+  result_modal_container.querySelector('[data-id="nodes"]').textContent =
+    nodes_count;
+  result_modal_container.querySelector('[data-id="distance"]').textContent =
+    distance;
+  result_modal_container.classList.add("open");
+
+  result_modal_container
+    .querySelector('button[data-id="continue"]')
+    .addEventListener("click", handleCloseResultsModel);
+}
 
 container_el.addEventListener("click", (e) => {
   if (is_run_mode) handleRunMode(e);
@@ -197,7 +241,6 @@ save_btn_el.addEventListener("click", (e) => {
   });
 
   localStorage.setItem(LOCAL_STORAGE_KEY, data);
-
   navigator.clipboard.writeText(data);
 
   alert("Graph is copied");
@@ -210,25 +253,8 @@ load_btn_el.addEventListener("click", (e) => {
   load(config);
 });
 
-setUpCanvas();
-
-function closeAlgorithmsModal() {
-  algorithms_modal_container.classList.remove("open");
-
-  window.removeEventListener("click", closeAlgorithmsModal);
-  algorithms_modal_container.querySelectorAll("button").forEach((btn) => {
-    btn.removeEventListener("click", handleSelectAlgorithm);
-  });
-}
-
-function handleSelectAlgorithm(e) {
-  const algorithmName = e.target.getAttribute("data-id");
-  algorithm = search.makeAlgorithm(algorithmName);
-}
-
 run_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
-  is_run_mode = !is_run_mode;
   origin_node = null;
 
   algorithms_modal_container.classList.add("open");
@@ -241,6 +267,8 @@ run_btn_el.addEventListener("click", (e) => {
 });
 
 (() => {
+  setUpCanvas();
+
   const config = localStorage.getItem(LOCAL_STORAGE_KEY);
 
   if (config) {
