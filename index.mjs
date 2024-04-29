@@ -1,6 +1,7 @@
-import * as creator from "./creator-helpers.mjs";
-import * as run from "./run-helpers.mjs";
-import * as search from "./search-helpers.mjs";
+import * as creator from "./creator.mjs";
+import * as draw from "./draw.mjs";
+import * as search from "./search.mjs";
+import { NODE_TYPE, NODE_STATUS } from "./constants.mjs";
 
 const container_el = document.querySelector("#app");
 const save_btn_el = document.querySelector("#save-btn");
@@ -19,9 +20,9 @@ const edgesSubject = new rxjs.Subject();
 const runSubject = new rxjs.Subject();
 
 nodesSubject.subscribe((node) => creator.addNode(matrix, nodes, node));
-nodesSubject.subscribe((node) => creator.drawNode(ctx, node));
+nodesSubject.subscribe((node) => draw.drawNode(ctx, node));
 edgesSubject.subscribe((edge) => creator.addEdge(matrix, edge));
-edgesSubject.subscribe((edge) => creator.drawEdge(ctx, nodes, edge));
+edgesSubject.subscribe((edge) => draw.drawEdge(ctx, nodes, edge));
 
 runSubject
   .pipe(
@@ -30,12 +31,12 @@ runSubject
     )
   )
   .subscribe((event) => {
-    const { type, node } = event;
+    const { status, node } = event;
 
-    if (type === "DISCOVERED") run.drawDiscoveredNode(ctx, node);
-    else if (type === "VISITED") run.drawVisitedNode(ctx, node);
-    else if (type === "FOUND") run.drawFoundNode(ctx, node);
-    else if (type === "PATH") run.drawPathNode(ctx, node);
+    if (status === NODE_STATUS.DISCOVERED) draw.drawDiscoveredNode(ctx, node);
+    else if (status === NODE_STATUS.VISITED) draw.drawVisitedNode(ctx, node);
+    else if (status === NODE_STATUS.FOUND) draw.drawFoundNode(ctx, node);
+    else if (status === NODE_STATUS.PATH) draw.drawPathNode(ctx, node);
   });
 
 function setUpCanvas() {
@@ -55,12 +56,12 @@ function load(config) {
   nodes = config.nodes;
   matrix = config.matrix;
 
-  for (const node of nodes) creator.drawNode(ctx, node);
+  for (const node of nodes) draw.drawNode(ctx, node);
 
   for (let i = 0; i < matrix.length; i++) {
     for (let j = 0; j < matrix.length; j++) {
       if (matrix[i][j] === 1) {
-        creator.drawEdge(ctx, nodes, [i, j]);
+        draw.drawEdge(ctx, nodes, [i, j]);
       }
     }
   }
@@ -92,7 +93,7 @@ function handleCreatorMode(e) {
       return;
     }
 
-    const type = e.altKey ? "final" : "normal";
+    const type = e.altKey ? NODE_TYPE.FINAL : NODE_TYPE.NORMAL;
 
     emitAddNode(type, pos);
   }
@@ -102,11 +103,12 @@ function handleRunMode(e) {
   const pos = [e.x, e.y];
   const nodeIdx = creator.getNode(nodes, pos);
 
-  if (origin_node || nodeIdx === -1 || nodes[nodeIdx] === "FINAL") return;
+  if (origin_node || nodeIdx === -1 || nodes[nodeIdx] === NODE_TYPE.FINAL)
+    return;
 
   origin_node = nodes[nodeIdx];
 
-  run.drawHighlightedNode(ctx, origin_node);
+  draw.drawHighlightedNode(ctx, origin_node);
 
   const path = search.bfs(
     nodes,
@@ -114,21 +116,21 @@ function handleRunMode(e) {
     nodeIdx,
     (idx) => {
       if (nodeIdx === idx) return;
-      runSubject.next({ type: "DISCOVERED", node: nodes[idx] });
+      runSubject.next({ status: NODE_STATUS.DISCOVERED, node: nodes[idx] });
     },
     (idx) => {
       if (nodeIdx === idx) return;
-      runSubject.next({ type: "VISITED", node: nodes[idx] });
+      runSubject.next({ status: NODE_STATUS.VISITED, node: nodes[idx] });
     },
     (idx) => {
-      runSubject.next({ type: "FOUND", node: nodes[idx] });
+      runSubject.next({ status: NODE_STATUS.FOUND, node: nodes[idx] });
     }
   );
 
   const nodes_in_between_path = path.slice(1, path.length - 1);
 
   for (const idx of nodes_in_between_path) {
-    runSubject.next({ type: "PATH", node: nodes[idx] });
+    runSubject.next({ status: NODE_STATUS.PATH, node: nodes[idx] });
   }
 }
 

@@ -1,4 +1,4 @@
-import { SPECIAL_NODE_RADIUS, NORMAL_NODE_RADIUS } from "./constants.mjs";
+import { SPECIAL_NODE_RADIUS } from "./constants.mjs";
 
 export function addNode(matrix, nodes, node) {
   nodes.push(node);
@@ -36,34 +36,4 @@ export function getNode(nodes, pos) {
       pos
     );
   });
-}
-
-export function drawNode(ctx, node) {
-  const {
-    type,
-    pos: [x, y],
-  } = node;
-
-  ctx.beginPath();
-  ctx.arc(
-    x,
-    y,
-    type === "final" ? SPECIAL_NODE_RADIUS : NORMAL_NODE_RADIUS,
-    0,
-    2 * Math.PI
-  );
-  ctx.fillStyle = type === "final" ? "red" : "black";
-  ctx.stroke();
-  ctx.fill();
-}
-
-export function drawEdge(ctx, nodes, edge) {
-  const [originNode, targetNode] = [nodes[edge[0]], nodes[edge[1]]];
-
-  ctx.moveTo(originNode.pos[0], originNode.pos[1]);
-  ctx.lineTo(targetNode.pos[0], targetNode.pos[1]);
-  ctx.strokeStyle = "black";
-  ctx.strokeWidth = 100;
-  ctx.lineCap = "round";
-  ctx.stroke();
 }
