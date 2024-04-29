@@ -1,4 +1,14 @@
-import {NODE_TYPE} from './constants.mjs'
+import { NODE_TYPE } from "./constants.mjs";
+
+export const makeAlgorithm = (algorithName) => {
+  if (algorithName === "bfs") {
+    return bfs;
+  } else if (algorithName === "dfs") {
+    return dfs;
+  }
+
+  return null;
+};
 
 export const bfs = (nodes, matrix, originIdx, onDiscover, onVisit, onFind) => {
   const discovered = new Array(nodes.length).fill(0);

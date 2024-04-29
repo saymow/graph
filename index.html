@@ -9,14 +9,25 @@
   </head>
   <body>
     <div id="app">
-      <canvas width="960" height="960">
-      </canvas>
-      <!-- <img class="map-backdrop" src="map.png" alt="map"></img> -->
+      <canvas width="960" height="960"> </canvas>
       <header class="action-buttons">
+        <button id="run-btn">Run</button>
         <button id="save-btn">Save</button>
         <button id="load-btn">Load</button>
-        <button id="run-btn">Run Mode</button>
       </header>
+    </div>
+    <div class="modal-container" id="algorithm-modal-container">
+      <section id="algorithm-modal" class="modal">
+        <h1>Select the algorithm</h1>
+        <ul>
+          <li>
+            <button data-id="dfs">Depth First Search (DFS)</button>
+          </li>
+          <li>
+            <button data-id="bfs">Breadth First Search (BFS)</button>
+          </li>
+        </ul>
+      </section>
     </div>
     <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
     <script type="module" src="index.mjs"></script>

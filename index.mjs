@@ -8,6 +8,9 @@ const save_btn_el = document.querySelector("#save-btn");
 const load_btn_el = document.querySelector("#load-btn");
 const run_btn_el = document.querySelector("#run-btn");
 const canvas_el = document.querySelector("canvas");
+const algorithms_modal_container = document.querySelector(
+  "#algorithm-modal-container"
+);
 const ctx = canvas_el.getContext("2d");
 
 const LOCAL_STORAGE_KEY = "@GRAPH";
@@ -131,7 +134,7 @@ function handleRunMode(e) {
 
   draw.drawHighlightedNode(ctx, nodes, origin_node);
 
-  const path = search.dfs(
+  const path = algorithm(
     nodes,
     matrix,
     nodeIdx,
@@ -178,6 +181,7 @@ function handleRunMode(e) {
 
 let origin_node;
 let is_run_mode = false;
+let algorithm;
 
 container_el.addEventListener("click", (e) => {
   if (is_run_mode) handleRunMode(e);
@@ -208,13 +212,32 @@ load_btn_el.addEventListener("click", (e) => {
 
 setUpCanvas();
 
+function closeAlgorithmsModal() {
+  algorithms_modal_container.classList.remove("open");
+
+  window.removeEventListener("click", closeAlgorithmsModal);
+  algorithms_modal_container.querySelectorAll("button").forEach((btn) => {
+    btn.removeEventListener("click", handleSelectAlgorithm);
+  });
+}
+
+function handleSelectAlgorithm(e) {
+  const algorithmName = e.target.getAttribute("data-id");
+  algorithm = search.makeAlgorithm(algorithmName);
+}
+
 run_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
   is_run_mode = !is_run_mode;
   origin_node = null;
 
-  if (is_run_mode) run_btn_el.innerText = "Creator Mode";
-  else run_btn_el.innerText = "Run Mode";
+  algorithms_modal_container.classList.add("open");
+
+  algorithms_modal_container.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", handleSelectAlgorithm);
+  });
+
+  window.addEventListener("click", closeAlgorithmsModal);
 });
 
 (() => {
