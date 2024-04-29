@@ -19,8 +19,30 @@ const nodesSubject = new rxjs.Subject();
 const edgesSubject = new rxjs.Subject();
 const runSubject = new rxjs.Subject();
 
+function load(config) {
+  nodes = config.nodes;
+  matrix = config.matrix;
+  paint();
+}
+
+function paint() {
+  ctx.clearRect(0, 0, canvas_el.width, canvas_el.height);
+
+  for (let i = 0; i < matrix.length; i++) {
+    for (let j = 0; j < matrix.length; j++) {
+      if (matrix[i][j] === 1) {
+        draw.drawEdge(ctx, nodes[i], nodes[j]);
+      }
+    }
+  }
+
+  for (const node of nodes) {
+    draw.drawNode(ctx, nodes, node);
+  }
+}
+
 nodesSubject.subscribe((node) => creator.addNode(matrix, nodes, node));
-nodesSubject.subscribe((node) => draw.drawNode(ctx, node));
+nodesSubject.subscribe(() => paint());
 edgesSubject.subscribe((edge) => creator.addEdge(matrix, edge));
 edgesSubject.subscribe((edge) => {
   const [originNode, targetNode] = [nodes[edge[0]], nodes[edge[1]]];
@@ -40,10 +62,13 @@ runSubject
     if (type === RUN_EVENT_TYPE.NODE) {
       const { status, node } = payload;
 
-      if (status === NODE_STATUS.DISCOVERED) draw.drawDiscoveredNode(ctx, node);
-      else if (status === NODE_STATUS.VISITED) draw.drawVisitedNode(ctx, node);
-      else if (status === NODE_STATUS.FOUND) draw.drawFoundNode(ctx, node);
-      else if (status === NODE_STATUS.PATH) draw.drawPathNode(ctx, node);
+      if (status === NODE_STATUS.DISCOVERED)
+        draw.drawDiscoveredNode(ctx, nodes, node);
+      else if (status === NODE_STATUS.VISITED)
+        draw.drawVisitedNode(ctx, nodes, node);
+      else if (status === NODE_STATUS.FOUND)
+        draw.drawFoundNode(ctx, nodes, node);
+      else if (status === NODE_STATUS.PATH) draw.drawPathNode(ctx, nodes, node);
     } else {
       const { originNode, targetNode } = payload;
       draw.drawHighlightedEdge(ctx, originNode, targetNode);
@@ -61,21 +86,6 @@ function emitAddNode(type, pos) {
 
 function emitAddEdge(edge) {
   edgesSubject.next(edge);
-}
-
-function load(config) {
-  nodes = config.nodes;
-  matrix = config.matrix;
-
-  for (const node of nodes) draw.drawNode(ctx, node);
-
-  for (let i = 0; i < matrix.length; i++) {
-    for (let j = 0; j < matrix.length; j++) {
-      if (matrix[i][j] === 1) {
-        draw.drawEdge(ctx, nodes[i], nodes[j]);
-      }
-    }
-  }
 }
 
 function handleCreatorMode(e) {
@@ -119,9 +129,9 @@ function handleRunMode(e) {
 
   origin_node = nodes[nodeIdx];
 
-  draw.drawHighlightedNode(ctx, origin_node);
+  draw.drawHighlightedNode(ctx, nodes, origin_node);
 
-  const path = search.bfs(
+  const path = search.dfs(
     nodes,
     matrix,
     nodeIdx,

@@ -1,5 +1,5 @@
 /**
- * @typedef {{x: number, y: number, radius: number, fillStyle: string, strokeStyle: string}} Circle
+ * @typedef {{x: number, y: number, radius: number, fillStyle: string, strokeStyle: string, text?: string, outerText?: string}} Circle
  * @typedef {{a: {x: number, y: number }, b: {x: number, y: number }, color: string}} Edge
  */
 
@@ -14,6 +14,30 @@ export function drawCircle(ctx, circle) {
   ctx.strokeStyle = circle.strokeStyle;
   ctx.stroke();
   ctx.fill();
+
+  if (circle.text) {
+    ctx.font = "16pt Calibri";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText(circle.text, circle.x, circle.y + circle.radius / 2);
+  }
+
+  if (circle.outerText) {
+    const lines = circle.outerText.split("\n");
+    const lineHeight = 16;
+
+    ctx.font = "12pt Calibri";
+    ctx.fillStyle = "black";
+    ctx.textAlign = "left";
+
+    for (let idx = 0; idx < lines.length; idx++) {
+      ctx.fillText(
+        lines[idx],
+        circle.x + circle.radius * 2,
+        circle.y + idx * lineHeight
+      );
+    }
+  }
 }
 
 /**

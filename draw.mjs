@@ -1,20 +1,71 @@
 import { drawCircle, drawEdge as canvasDrawEdge } from "./canvas.mjs";
-import { NORMAL_NODE_RADIUS, SPECIAL_NODE_RADIUS } from "./constants.mjs";
+import {
+  NORMAL_NODE_RADIUS,
+  SPECIAL_NODE_RADIUS,
+  NODE_TYPE,
+} from "./constants.mjs";
+import { getDistance } from "./utils.mjs";
 
-function makeCircle(node, fillStyle, strokeStyle) {
+function makeFinalNodeText(nodes, node) {
+  const nodeIdx = nodes.indexOf(node);
+  let count = 0;
+
+  for (let idx = 0; idx < nodeIdx; idx++) {
+    if (nodes[idx].type === NODE_TYPE.FINAL) {
+      count++;
+    }
+  }
+
+  return count.toString();
+}
+
+function makeNodeText(nodes, node) {
+  let text = "";
+  let count = 0;
+
+  for (const item of nodes) {
+    if (item.type === NODE_TYPE.FINAL) {
+      text = text.concat(
+        `${count}) ${getDistance(node.pos, item.pos).toFixed(2)}\n`
+      );
+      count++;
+    }
+  }
+
+  return text;
+}
+
+function makeCircle(nodes, node, fillStyle, strokeStyle) {
+  let text;
+  let outerText;
+
+  if (node.type === NODE_TYPE.FINAL) {
+    text = makeFinalNodeText(nodes, node);
+  } else {
+    outerText = makeNodeText(nodes, node);
+  }
+
   return {
     x: node.pos[0],
     y: node.pos[1],
-    radius: node.type === "final" ? SPECIAL_NODE_RADIUS : NORMAL_NODE_RADIUS,
+    radius:
+      node.type === NODE_TYPE.FINAL ? SPECIAL_NODE_RADIUS : NORMAL_NODE_RADIUS,
     fillStyle,
     strokeStyle,
+    text,
+    outerText,
   };
 }
 
-export function drawNode(ctx, node) {
+export function drawNode(ctx, nodes, node) {
   drawCircle(
     ctx,
-    makeCircle(node, node.type === "final" ? "red" : "black", "black")
+    makeCircle(
+      nodes,
+      node,
+      node.type === NODE_TYPE.FINAL ? "red" : "black",
+      "black"
+    )
   );
 }
 
@@ -46,22 +97,22 @@ export function drawHighlightedEdge(ctx, originNode, targetNode) {
   });
 }
 
-export function drawHighlightedNode(ctx, node) {
-  drawCircle(ctx, makeCircle(node, "purple", "black"));
+export function drawHighlightedNode(ctx, nodes, node) {
+  drawCircle(ctx, makeCircle(nodes, node, "purple", "black"));
 }
 
-export function drawDiscoveredNode(ctx, node) {
-  drawCircle(ctx, makeCircle(node, "white", "black"));
+export function drawDiscoveredNode(ctx, nodes, node) {
+  drawCircle(ctx, makeCircle(nodes, node, "white", "black"));
 }
 
-export function drawVisitedNode(ctx, node) {
-  drawCircle(ctx, makeCircle(node, "gray", "black"));
+export function drawVisitedNode(ctx, nodes, node) {
+  drawCircle(ctx, makeCircle(nodes, node, "gray", "black"));
 }
 
-export function drawFoundNode(ctx, node) {
-  drawCircle(ctx, makeCircle(node, "purple", "black"));
+export function drawFoundNode(ctx, nodes, node) {
+  drawCircle(ctx, makeCircle(nodes, node, "purple", "black"));
 }
 
-export function drawPathNode(ctx, node) {
-  drawCircle(ctx, makeCircle(node, "#a54ba1bf", "black"));
+export function drawPathNode(ctx, nodes, node) {
+  drawCircle(ctx, makeCircle(nodes, node, "#a54ba1bf", "black"));
 }
