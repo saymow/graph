@@ -1,7 +1,7 @@
 import * as creator from "./creator.mjs";
 import * as draw from "./draw.mjs";
 import * as search from "./search.mjs";
-import { NODE_TYPE, NODE_STATUS } from "./constants.mjs";
+import { NODE_TYPE, NODE_STATUS, RUN_EVENT_TYPE } from "./constants.mjs";
 
 const container_el = document.querySelector("#app");
 const save_btn_el = document.querySelector("#save-btn");
@@ -22,7 +22,11 @@ const runSubject = new rxjs.Subject();
 nodesSubject.subscribe((node) => creator.addNode(matrix, nodes, node));
 nodesSubject.subscribe((node) => draw.drawNode(ctx, node));
 edgesSubject.subscribe((edge) => creator.addEdge(matrix, edge));
-edgesSubject.subscribe((edge) => draw.drawEdge(ctx, nodes, edge));
+edgesSubject.subscribe((edge) => {
+  const [originNode, targetNode] = [nodes[edge[0]], nodes[edge[1]]];
+
+  draw.drawEdge(ctx, originNode, targetNode);
+});
 
 runSubject
   .pipe(
@@ -31,12 +35,19 @@ runSubject
     )
   )
   .subscribe((event) => {
-    const { status, node } = event;
+    const { type, payload } = event;
 
-    if (status === NODE_STATUS.DISCOVERED) draw.drawDiscoveredNode(ctx, node);
-    else if (status === NODE_STATUS.VISITED) draw.drawVisitedNode(ctx, node);
-    else if (status === NODE_STATUS.FOUND) draw.drawFoundNode(ctx, node);
-    else if (status === NODE_STATUS.PATH) draw.drawPathNode(ctx, node);
+    if (type === RUN_EVENT_TYPE.NODE) {
+      const { status, node } = payload;
+
+      if (status === NODE_STATUS.DISCOVERED) draw.drawDiscoveredNode(ctx, node);
+      else if (status === NODE_STATUS.VISITED) draw.drawVisitedNode(ctx, node);
+      else if (status === NODE_STATUS.FOUND) draw.drawFoundNode(ctx, node);
+      else if (status === NODE_STATUS.PATH) draw.drawPathNode(ctx, node);
+    } else {
+      const { originNode, targetNode } = payload;
+      draw.drawHighlightedEdge(ctx, originNode, targetNode);
+    }
   });
 
 function setUpCanvas() {
@@ -61,7 +72,7 @@ function load(config) {
   for (let i = 0; i < matrix.length; i++) {
     for (let j = 0; j < matrix.length; j++) {
       if (matrix[i][j] === 1) {
-        draw.drawEdge(ctx, nodes, [i, j]);
+        draw.drawEdge(ctx, nodes[i], nodes[j]);
       }
     }
   }
@@ -116,21 +127,42 @@ function handleRunMode(e) {
     nodeIdx,
     (idx) => {
       if (nodeIdx === idx) return;
-      runSubject.next({ status: NODE_STATUS.DISCOVERED, node: nodes[idx] });
+      runSubject.next({
+        type: RUN_EVENT_TYPE.NODE,
+        payload: { status: NODE_STATUS.DISCOVERED, node: nodes[idx] },
+      });
     },
     (idx) => {
       if (nodeIdx === idx) return;
-      runSubject.next({ status: NODE_STATUS.VISITED, node: nodes[idx] });
+      runSubject.next({
+        type: RUN_EVENT_TYPE.NODE,
+        payload: { status: NODE_STATUS.VISITED, node: nodes[idx] },
+      });
     },
     (idx) => {
-      runSubject.next({ status: NODE_STATUS.FOUND, node: nodes[idx] });
+      runSubject.next({
+        type: RUN_EVENT_TYPE.NODE,
+        payload: { status: NODE_STATUS.FOUND, node: nodes[idx] },
+      });
     }
   );
 
-  const nodes_in_between_path = path.slice(1, path.length - 1);
-
-  for (const idx of nodes_in_between_path) {
-    runSubject.next({ status: NODE_STATUS.PATH, node: nodes[idx] });
+  for (let idx = 0; idx < path.length; idx++) {
+    if (idx !== 0 && idx !== path.length - 1) {
+      runSubject.next({
+        type: RUN_EVENT_TYPE.NODE,
+        payload: { status: NODE_STATUS.PATH, node: nodes[path[idx]] },
+      });
+    }
+    if (idx !== path.length - 1) {
+      runSubject.next({
+        type: RUN_EVENT_TYPE.EDGE,
+        payload: {
+          originNode: nodes[path[idx]],
+          targetNode: nodes[path[idx + 1]],
+        },
+      });
+    }
   }
 }
 

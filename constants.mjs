@@ -10,3 +10,7 @@ export const NODE_STATUS = Object.seal({
   FOUND: "FOUND",
   PATH: "PATH",
 });
+export const RUN_EVENT_TYPE = Object.seal({
+  NODE: "NODE",
+  EDGE: "EDGE",
+});
