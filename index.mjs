@@ -199,6 +199,9 @@ function handleRunMode(e) {
 
 function handleCloseComparissonModal() {
   comparisson_modal_container.classList.remove("open");
+  origin_node = null;
+  paint();
+
   comparisson_modal_container
     .querySelectorAll("button[data-id]")
     .forEach((button) => {
@@ -208,6 +211,7 @@ function handleCloseComparissonModal() {
 }
 
 function handleComparissonRunAlgorithm(e) {
+  e.stopPropagation();
   handleSelectAlgorithm(e);
   runAlgorithm();
 }
