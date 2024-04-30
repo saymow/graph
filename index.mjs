@@ -14,6 +14,7 @@ const container_el = document.querySelector("#app");
 const save_btn_el = document.querySelector("#save-btn");
 const load_btn_el = document.querySelector("#load-btn");
 const run_btn_el = document.querySelector("#run-btn");
+const clear_btn_el = document.querySelector("#clear-btn");
 const comparissons_btn_el = document.querySelector("#comparissons-btn");
 const canvas_el = document.querySelector("canvas");
 const algorithms_modal_container = document.querySelector(
@@ -200,9 +201,9 @@ function handleCloseComparissonModal() {
   comparisson_modal_container.classList.remove("open");
   comparisson_modal_container
     .querySelectorAll("button[data-id]")
-    .forEach(button => {
+    .forEach((button) => {
       button.removeEventListener("click", handleComparissonRunAlgorithm);
-    })
+    });
   window.removeEventListener("click", handleCloseComparissonModal);
 }
 
@@ -341,6 +342,15 @@ comparissons_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
 
   mode = MODE.COMPARISSON;
+});
+
+clear_btn_el.addEventListener("click", (e) => {
+  e.stopPropagation();
+  mode = MODE.SANDBOX;
+
+  matrix = [];
+  nodes = [];
+  paint();
 });
 
 (() => {
