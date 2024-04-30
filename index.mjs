@@ -7,18 +7,23 @@ import {
   NODE_TYPE,
   NODE_STATUS,
   RUN_EVENT_TYPE,
+  MODE,
 } from "./constants.mjs";
 
 const container_el = document.querySelector("#app");
 const save_btn_el = document.querySelector("#save-btn");
 const load_btn_el = document.querySelector("#load-btn");
 const run_btn_el = document.querySelector("#run-btn");
+const comparissons_btn_el = document.querySelector("#comparissons-btn");
 const canvas_el = document.querySelector("canvas");
 const algorithms_modal_container = document.querySelector(
   "#algorithm-modal-container"
 );
 const result_modal_container = document.querySelector(
   "#result-modal-container"
+);
+const comparisson_modal_container = document.querySelector(
+  "#algorithm-comparissons-modal-container"
 );
 const ctx = canvas_el.getContext("2d");
 
@@ -29,7 +34,7 @@ const runSubject = new rxjs.Subject();
 let nodes = [];
 let matrix = [];
 let origin_node;
-let is_run_mode = false;
+let mode = MODE.SANDBOX;
 let algorithm;
 
 function setUpCanvas() {
@@ -94,7 +99,7 @@ runSubject
     }
   });
 
-function handleCreatorMode(e) {
+function handleSandboxMode(e) {
   const pos = [e.x, e.y];
   const node = creator.getNode(nodes, pos);
 
@@ -126,14 +131,10 @@ function handleCreatorMode(e) {
   }
 }
 
-function handleRunMode(e) {
-  const pos = [e.x, e.y];
-  const nodeIdx = creator.getNode(nodes, pos);
+function runAlgorithm() {
+  if (!origin_node || !algorithm) return;
 
-  if (origin_node || nodeIdx === -1 || nodes[nodeIdx] === NODE_TYPE.FINAL)
-    return;
-
-  origin_node = nodes[nodeIdx];
+  const nodeIdx = nodes.indexOf(origin_node);
 
   draw.drawHighlightedNode(ctx, nodes, origin_node);
 
@@ -184,6 +185,73 @@ function handleRunMode(e) {
   runSubject.next({ type: RUN_EVENT_TYPE.END, payload: { path } });
 }
 
+function handleRunMode(e) {
+  const pos = [e.x, e.y];
+  const nodeIdx = creator.getNode(nodes, pos);
+
+  if (origin_node || nodeIdx === -1 || nodes[nodeIdx] === NODE_TYPE.FINAL)
+    return;
+
+  origin_node = nodes[nodeIdx];
+  runAlgorithm();
+}
+
+function handleCloseComparissonModal() {
+  comparisson_modal_container.classList.remove("open");
+  comparisson_modal_container
+    .querySelectorAll("button[data-id]")
+    .forEach(button => {
+      button.removeEventListener("click", handleComparissonRunAlgorithm);
+    })
+  window.removeEventListener("click", handleCloseComparissonModal);
+}
+
+function handleComparissonRunAlgorithm(e) {
+  handleSelectAlgorithm(e);
+  runAlgorithm();
+}
+
+function handleComparissonMode(e) {
+  const pos = [e.x, e.y];
+  const nodeIdx = creator.getNode(nodes, pos);
+
+  if (origin_node || nodeIdx === -1 || nodes[nodeIdx] === NODE_TYPE.FINAL)
+    return;
+
+  origin_node = nodes[nodeIdx];
+  draw.drawHighlightedNode(ctx, nodes, origin_node);
+
+  comparisson_modal_container
+    .querySelectorAll("li[data-id]")
+    .forEach((algorithm_section) => {
+      const algorithmName = algorithm_section.getAttribute("data-id");
+      const algorithm = search.makeAlgorithm(algorithmName);
+      const path = algorithm(
+        nodes,
+        matrix,
+        nodeIdx,
+        () => {},
+        () => {},
+        () => {}
+      );
+
+      const nodes_path = path.map((nodeIdx) => nodes[nodeIdx]);
+      const nodes_count = path.length - 1;
+      const distance = computePathDistance(nodes_path).toFixed(2);
+
+      algorithm_section.querySelector('[data-id="nodes"]').textContent =
+        nodes_count;
+      algorithm_section.querySelector('[data-id="distance"]').textContent =
+        distance;
+      algorithm_section
+        .querySelector("button")
+        .addEventListener("click", handleComparissonRunAlgorithm);
+    });
+
+  comparisson_modal_container.classList.add("open");
+  window.addEventListener("click", handleCloseComparissonModal);
+}
+
 function closeAlgorithmsModal() {
   algorithms_modal_container.classList.remove("open");
 
@@ -194,17 +262,17 @@ function closeAlgorithmsModal() {
 }
 
 function handleSelectAlgorithm(e) {
-  is_run_mode = true;
+  mode = MODE.RUN;
   const algorithmName = e.target.getAttribute("data-id");
   algorithm = search.makeAlgorithm(algorithmName);
 }
 
 function handleCloseResultsModel() {
   origin_node = null;
-  is_run_mode = false;
-  
+  mode = MODE.SANDBOX;
+
   paint();
-  
+
   result_modal_container.classList.remove("open");
   result_modal_container
     .querySelector('button[data-id="continue"]')
@@ -228,8 +296,11 @@ function handleOpenResultModel(path) {
 }
 
 container_el.addEventListener("click", (e) => {
-  if (is_run_mode) handleRunMode(e);
-  else handleCreatorMode(e);
+  e.stopPropagation();
+
+  if (mode === MODE.RUN) handleRunMode(e);
+  else if (mode === MODE.SANDBOX) handleSandboxMode(e);
+  else if (mode === MODE.COMPARISSON) handleComparissonMode(e);
 });
 
 save_btn_el.addEventListener("click", (e) => {
@@ -264,6 +335,12 @@ run_btn_el.addEventListener("click", (e) => {
   });
 
   window.addEventListener("click", closeAlgorithmsModal);
+});
+
+comparissons_btn_el.addEventListener("click", (e) => {
+  e.stopPropagation();
+
+  mode = MODE.COMPARISSON;
 });
 
 (() => {

@@ -12,6 +12,7 @@
       <canvas width="960" height="960"> </canvas>
       <header class="action-buttons">
         <button id="run-btn">Run</button>
+        <button id="comparissons-btn">Comparissons</button>
         <button id="save-btn">Save</button>
         <button id="load-btn">Load</button>
       </header>
@@ -45,8 +46,67 @@
             <span data-id="distance">5</span>
           </section>
         </article>
-        <ul class="options">
-          <li><button data-id="continue">CONTINUE</button></li>
+        <button data-id="continue">CONTINUE</button>
+      </section>
+    </div>
+    <div class="modal-container" id="algorithm-comparissons-modal-container">
+      <section id="algorithm-comparissons-modal" class="modal">
+        <h1>algorithm comparissons</h1>
+        <ul>
+          <li data-id="dfs">
+            <article class="data-container">
+              <header><h3>Depth First Search (DFS)</h3></header>
+              <section>
+                <article>
+                  <span>Nodes</span>
+                  <span data-id="nodes">5</span>
+                </article>
+                <article>
+                  <span>Distance</span>
+                  <span data-id="distance">5</span>
+                </article>
+                <article>
+                  <button data-id="dfs">Run</button>
+                </article>
+              </section>
+            </article>
+          </li>
+          <li data-id="bfs">
+            <article class="data-container">
+              <header><h3>Breadth First Search (BFS)</h3></header>
+              <section>
+                <article>
+                  <span>Nodes</span>
+                  <span data-id="nodes">5</span>
+                </article>
+                <article>
+                  <span>Distance</span>
+                  <span data-id="distance">5</span>
+                </article>
+                <article>
+                  <button data-id="bfs">Run</button>
+                </article>
+              </section>
+            </article>
+          </li>
+          <li data-id="best-first-search">
+            <article class="data-container">
+              <header><h3>Best First Search</h3></header>
+              <section>
+                <article>
+                  <span>Nodes</span>
+                  <span data-id="nodes">5</span>
+                </article>
+                <article>
+                  <span>Distance</span>
+                  <span data-id="distance">5</span>
+                </article>
+                <article>
+                  <button data-id="best-first-search">Run</button>
+                </article>
+              </section>
+            </article>
+          </li>
         </ul>
       </section>
     </div>
