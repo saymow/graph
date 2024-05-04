@@ -73,6 +73,7 @@ function paint(originNode) {
 }
 
 addNodeSubject.subscribe((node) => creator.addNode(matrix, nodes, node));
+
 addEdgeSubject.subscribe((edge) => creator.addEdge(matrix, edge));
 
 modeSubject.subscribe((mode) => {
@@ -121,6 +122,19 @@ rxjs
     })
   )
   .subscribe(handleComparissonMode);
+
+rxjs
+  .combineLatest([originNodeSubject, modeSubject])
+  .pipe(
+    rxjs.operators.map(([origin, mode]) => ({
+      origin,
+      mode,
+    })),
+    rxjs.operators.filter((payload) => {
+      return payload.mode === MODE.RUN && !!payload.origin;
+    })
+  )
+  .subscribe(handleOpenAlgorithmsModal);
 
 rxjs
   .combineLatest([originNodeSubject, modeSubject, algorithmSubject])
@@ -453,7 +467,7 @@ function handleAlgorithmButtonClick(e) {
   algorithmSubject.next(algorithms.makeAlgorithm(algorithmName));
 }
 
-function handleCloseResultsModal() {
+function handleCloseResultsModal(e) {
   originNodeSubject.next(null);
   algorithmSubject.next(null);
 
@@ -492,6 +506,15 @@ function handleOpenResultModal(path) {
   result_modal_container
     .querySelector('button[data-id="continue"]')
     .addEventListener("click", handleCloseResultsModal);
+}
+
+function handleOpenAlgorithmsModal() {
+  algorithms_modal_container.classList.add("open");
+  algorithms_modal_container.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", handleAlgorithmButtonClick);
+  });
+
+  window.addEventListener("click", closeAlgorithmsModal);
 }
 
 rxjs
@@ -546,16 +569,9 @@ sandbox_btn_el.addEventListener("click", (e) => {
 
 run_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
-
   algorithmSubject.next(null);
   originNodeSubject.next(null);
-
-  algorithms_modal_container.classList.add("open");
-  algorithms_modal_container.querySelectorAll("button").forEach((btn) => {
-    btn.addEventListener("click", handleAlgorithmButtonClick);
-  });
-
-  window.addEventListener("click", closeAlgorithmsModal);
+  modeSubject.next(MODE.RUN);
 });
 
 comparissons_btn_el.addEventListener("click", (e) => {
