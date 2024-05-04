@@ -52,7 +52,8 @@ function load(config) {
   paint();
 }
 
-function paint(origin_node_idx) {
+function paint(originNode) {
+  const originNodeIdx = nodes.indexOf(originNode);
   ctx.clearRect(0, 0, canvas_el.width, canvas_el.height);
 
   for (let i = 0; i < matrix.length; i++) {
@@ -64,7 +65,7 @@ function paint(origin_node_idx) {
   }
 
   for (let idx = 0; idx < nodes.length; idx++) {
-    if (idx === origin_node_idx) {
+    if (idx === originNodeIdx) {
       draw.drawHighlightedNode(ctx, nodes, nodes[idx]);
     } else {
       draw.drawNode(ctx, nodes, nodes[idx]);
