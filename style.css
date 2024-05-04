@@ -29,7 +29,7 @@ button {
   cursor: pointer;
 }
 
-button[hightlight] {
+button[highlight] {
   background: white;
   color: purple;
 }
@@ -69,7 +69,7 @@ button:hover {
   border-left: 1px solid white;
 }
 
-.mode-controls button:not(:first-child)[hightlight] {
+.mode-controls button:not(:first-child)[highlight] {
   border-left: 1px solid purple;
 }
 
