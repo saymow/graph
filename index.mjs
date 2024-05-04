@@ -28,14 +28,16 @@ const comparisson_modal_container = document.querySelector(
 );
 const ctx = canvas_el.getContext("2d");
 
-const nodesSubject = new rxjs.Subject();
-const edgesSubject = new rxjs.Subject();
-const runSubject = new rxjs.Subject();
+const addNodeSubject = new rxjs.Subject();
+const addEdgeSubject = new rxjs.Subject();
+const algorithmPresentationSubject = new rxjs.Subject();
+const clickSubject = new rxjs.Subject();
+const modeSubject = new rxjs.BehaviorSubject(MODE.SANDBOX);
+const originNodeSubject = new rxjs.BehaviorSubject();
+const algorithmSubject = new rxjs.BehaviorSubject();
 
 let nodes = [];
 let matrix = [];
-let origin_node;
-let mode = MODE.SANDBOX;
 let algorithm;
 
 function setUpCanvas() {
@@ -49,7 +51,7 @@ function load(config) {
   paint();
 }
 
-function paint() {
+function paint(origin_node_idx) {
   ctx.clearRect(0, 0, canvas_el.width, canvas_el.height);
 
   for (let i = 0; i < matrix.length; i++) {
@@ -60,20 +62,81 @@ function paint() {
     }
   }
 
-  for (const node of nodes) {
-    draw.drawNode(ctx, nodes, node);
+  for (let idx = 0; idx < nodes.length; idx++) {
+    if (idx === origin_node_idx) {
+      draw.drawHighlightedNode(ctx, nodes, nodes[idx]);
+    } else {
+      draw.drawNode(ctx, nodes, nodes[idx]);
+    }
   }
 }
 
-nodesSubject.subscribe((node) => creator.addNode(matrix, nodes, node));
-edgesSubject.subscribe((edge) => creator.addEdge(matrix, edge));
-nodesSubject.subscribe(() => paint());
-edgesSubject.subscribe((edge) => {
-  const [originNode, targetNode] = [nodes[edge[0]], nodes[edge[1]]];
-  draw.drawEdge(ctx, originNode, targetNode);
-});
+addNodeSubject.subscribe((node) => creator.addNode(matrix, nodes, node));
+addEdgeSubject.subscribe((edge) => creator.addEdge(matrix, edge));
 
-runSubject
+rxjs
+  .merge(originNodeSubject, modeSubject, addNodeSubject, addEdgeSubject)
+  .subscribe(paint);
+
+clickSubject
+  .pipe(rxjs.operators.filter((payload) => payload.mode === MODE.SANDBOX))
+  .subscribe(handleSandboxModeClick);
+
+clickSubject
+  .pipe(rxjs.operators.filter((payload) => payload.mode === MODE.RUN))
+  .subscribe(handleRunModeClick);
+
+clickSubject
+  .pipe(rxjs.operators.filter((payload) => payload.mode === MODE.COMPARISSON))
+  .subscribe(handleComparissonModeClick);
+
+rxjs
+  .combineLatest([originNodeSubject, modeSubject])
+  .pipe(
+    rxjs.operators.map(([origin, mode]) => ({
+      origin,
+      mode,
+    })),
+    rxjs.operators.filter((payload) => {
+      return payload.mode === MODE.COMPARISSON && !!payload.origin;
+    })
+  )
+  .subscribe(handleComparissonMode);
+
+rxjs
+  .combineLatest([originNodeSubject, modeSubject, algorithmSubject])
+  .pipe(
+    rxjs.operators.map(([origin, mode, algorithm]) => ({
+      origin,
+      mode,
+      algorithm,
+    })),
+    rxjs.operators.filter((payload) => {
+      return (
+        payload.mode === MODE.RUN && !!payload.origin && !!payload.algorithm
+      );
+    })
+  )
+  .subscribe(handleRunMode);
+
+rxjs
+  .combineLatest([originNodeSubject, modeSubject, algorithmSubject])
+  .pipe(
+    rxjs.operators.map(([origin, mode, algorithm]) => ({
+      origin,
+      mode,
+      algorithm,
+    })),
+    rxjs.operators.filter(
+      (payload) =>
+        payload.mode === MODE.COMPARISSON &&
+        !!payload.origin &&
+        !!payload.algorithm
+    )
+  )
+  .subscribe(handleRunAlgorithmComparissonMode);
+
+algorithmPresentationSubject
   .pipe(
     rxjs.operators.concatMap((event) =>
       rxjs.of(event).pipe(rxjs.operators.delay(200))
@@ -82,149 +145,108 @@ runSubject
   .subscribe((event) => {
     const { type, payload } = event;
 
-    if (type === RUN_EVENT_TYPE.NODE) {
-      const { status, node } = payload;
+    switch (type) {
+      case RUN_EVENT_TYPE.NODE:
+        const { status, node } = payload;
 
-      if (status === NODE_STATUS.DISCOVERED)
-        draw.drawDiscoveredNode(ctx, nodes, node);
-      else if (status === NODE_STATUS.VISITED)
-        draw.drawVisitedNode(ctx, nodes, node);
-      else if (status === NODE_STATUS.FOUND)
-        draw.drawFoundNode(ctx, nodes, node);
-      else if (status === NODE_STATUS.PATH) draw.drawPathNode(ctx, nodes, node);
-    } else if (type === RUN_EVENT_TYPE.EDGE) {
-      const { originNode, targetNode } = payload;
-      draw.drawHighlightedEdge(ctx, originNode, targetNode);
-    } else {
-      handleOpenResultModel(payload.path);
+        switch (status) {
+          case NODE_STATUS.DISCOVERED:
+            draw.drawDiscoveredNode(ctx, nodes, node);
+            break;
+          case NODE_STATUS.VISITED:
+            draw.drawVisitedNode(ctx, nodes, node);
+            break;
+          case NODE_STATUS.FOUND:
+            draw.drawFoundNode(ctx, nodes, node);
+            break;
+          case NODE_STATUS.PATH:
+            draw.drawPathNode(ctx, nodes, node);
+            break;
+        }
+        break;
+      case RUN_EVENT_TYPE.EDGE:
+        const { originNode, targetNode } = payload;
+
+        draw.drawHighlightedEdge(ctx, originNode, targetNode);
+        break;
     }
   });
 
-function handleSandboxMode(e) {
-  const pos = [e.x, e.y];
-  const node = creator.getNode(nodes, pos);
+algorithmPresentationSubject
+  .pipe(
+    rxjs.operators.concatMap((event) =>
+      rxjs.of(event).pipe(rxjs.operators.delay(200))
+    ),
+    rxjs.operators.withLatestFrom(modeSubject),
+    rxjs.operators.filter(
+      ([event, mode]) => mode === MODE.RUN && event.type === RUN_EVENT_TYPE.END
+    ),
+    rxjs.operators.map(([event]) => event)
+  )
+  .subscribe((event) => handleOpenResultModel(event.payload.path));
 
-  if (e.ctrlKey) {
-    if (node === -1) {
-      origin_node = null;
-      return;
-    }
+originNodeSubject.subscribe((origin) => ({ origin }));
 
-    if (origin_node === null) {
-      origin_node = node;
+algorithmPresentationSubject
+  .pipe(
+    rxjs.operators.concatMap((event) =>
+      rxjs.of(event).pipe(rxjs.operators.delay(200))
+    ),
+    rxjs.operators.withLatestFrom(modeSubject),
+    rxjs.operators.withLatestFrom(originNodeSubject),
+    rxjs.operators.filter((d) => {
+      const [[event, mode], origin] = d;
+
+      console.log(d);
+
+      return (
+        mode === MODE.COMPARISSON && origin && event.type === RUN_EVENT_TYPE.END
+      );
+    }),
+    rxjs.operators.map(([, origin]) => ({ origin }))
+  )
+  .subscribe(handleComparissonMode);
+
+function handleSandboxModeClick(payload) {
+  const { position, targetIdx } = payload;
+
+  originNodeSubject.pipe(rxjs.operators.take(1)).subscribe((originNode) => {
+    if (payload.ctrlKey) {
+      if (targetIdx === -1) {
+        originNodeSubject.next(null);
+        return;
+      }
+
+      if (!originNode) {
+        originNodeSubject.next(nodes[targetIdx]);
+      } else {
+        const originNodeIdx = nodes.indexOf(originNode);
+        const targetNodeIdx = targetIdx;
+
+        addEdgeSubject.next([originNodeIdx, targetNodeIdx]);
+        originNodeSubject.next(null);
+      }
     } else {
-      const target_node = node;
+      if (creator.getNode(nodes, position) !== -1) return;
 
-      edgesSubject.next([origin_node, target_node]);
-      origin_node = null;
+      const type = payload.altKey ? NODE_TYPE.FINAL : NODE_TYPE.NORMAL;
+
+      originNodeSubject.next(null);
+      addNodeSubject.next({ type, pos: position });
     }
-  } else {
-    origin_node = null;
-
-    if (node !== -1) {
-      origin_node = null;
-      return;
-    }
-
-    const type = e.altKey ? NODE_TYPE.FINAL : NODE_TYPE.NORMAL;
-
-    nodesSubject.next({ type, pos });
-  }
+  });
 }
 
-function runAlgorithm() {
-  if (!origin_node || !algorithm) return;
-
-  const nodeIdx = nodes.indexOf(origin_node);
-
-  draw.drawHighlightedNode(ctx, nodes, origin_node);
-
-  const path = algorithm(
-    nodes,
-    matrix,
-    nodeIdx,
-    (idx) => {
-      if (nodeIdx === idx) return;
-      runSubject.next({
-        type: RUN_EVENT_TYPE.NODE,
-        payload: { status: NODE_STATUS.DISCOVERED, node: nodes[idx] },
-      });
-    },
-    (idx) => {
-      if (nodeIdx === idx) return;
-      runSubject.next({
-        type: RUN_EVENT_TYPE.NODE,
-        payload: { status: NODE_STATUS.VISITED, node: nodes[idx] },
-      });
-    },
-    (idx) => {
-      runSubject.next({
-        type: RUN_EVENT_TYPE.NODE,
-        payload: { status: NODE_STATUS.FOUND, node: nodes[idx] },
-      });
-    }
-  );
-
-  for (let idx = 0; idx < path.length; idx++) {
-    if (idx !== 0 && idx !== path.length - 1) {
-      runSubject.next({
-        type: RUN_EVENT_TYPE.NODE,
-        payload: { status: NODE_STATUS.PATH, node: nodes[path[idx]] },
-      });
-    }
-    if (idx !== path.length - 1) {
-      runSubject.next({
-        type: RUN_EVENT_TYPE.EDGE,
-        payload: {
-          originNode: nodes[path[idx]],
-          targetNode: nodes[path[idx + 1]],
-        },
-      });
-    }
-  }
-
-  runSubject.next({ type: RUN_EVENT_TYPE.END, payload: { path } });
+function handleComparissonModeClick(payload) {
+  if (!payload.target) return;
+  originNodeSubject.next(payload.target);
 }
 
-function handleRunMode(e) {
-  const pos = [e.x, e.y];
-  const nodeIdx = creator.getNode(nodes, pos);
+function handleComparissonMode(payload) {
+  const { origin: target } = payload;
+  const targetIdx = nodes.indexOf(target);
 
-  if (origin_node || nodeIdx === -1 || nodes[nodeIdx] === NODE_TYPE.FINAL)
-    return;
-
-  origin_node = nodes[nodeIdx];
-  runAlgorithm();
-}
-
-function handleCloseComparissonModal() {
-  comparisson_modal_container.classList.remove("open");
-  origin_node = null;
-  paint();
-
-  comparisson_modal_container
-    .querySelectorAll("button[data-id]")
-    .forEach((button) => {
-      button.removeEventListener("click", handleComparissonRunAlgorithm);
-    });
-  window.removeEventListener("click", handleCloseComparissonModal);
-}
-
-function handleComparissonRunAlgorithm(e) {
-  e.stopPropagation();
-  handleSelectAlgorithm(e);
-  runAlgorithm();
-}
-
-function handleComparissonMode(e) {
-  const pos = [e.x, e.y];
-  const nodeIdx = creator.getNode(nodes, pos);
-
-  if (origin_node || nodeIdx === -1 || nodes[nodeIdx] === NODE_TYPE.FINAL)
-    return;
-
-  origin_node = nodes[nodeIdx];
-  draw.drawHighlightedNode(ctx, nodes, origin_node);
+  draw.drawHighlightedNode(ctx, nodes, target);
 
   comparisson_modal_container
     .querySelectorAll("li[data-id]")
@@ -234,7 +256,7 @@ function handleComparissonMode(e) {
       const path = algorithm(
         nodes,
         matrix,
-        nodeIdx,
+        targetIdx,
         () => {},
         () => {},
         () => {}
@@ -250,11 +272,107 @@ function handleComparissonMode(e) {
         distance;
       algorithm_section
         .querySelector("button")
-        .addEventListener("click", handleComparissonRunAlgorithm);
+        .addEventListener("click", handleComparissonAlgorithmClick);
     });
 
   comparisson_modal_container.classList.add("open");
-  window.addEventListener("click", handleCloseComparissonModal);
+  window.addEventListener("click", handleFinishComparisson);
+}
+
+function runAlgorithmPresentation(algorithm, target) {
+  const targetIdx = nodes.indexOf(target);
+
+  draw.drawHighlightedNode(ctx, nodes, target);
+
+  const path = algorithm(
+    nodes,
+    matrix,
+    targetIdx,
+    (idx) => {
+      if (targetIdx === idx) return;
+      algorithmPresentationSubject.next({
+        type: RUN_EVENT_TYPE.NODE,
+        payload: { status: NODE_STATUS.DISCOVERED, node: nodes[idx] },
+      });
+    },
+    (idx) => {
+      if (targetIdx === idx) return;
+      algorithmPresentationSubject.next({
+        type: RUN_EVENT_TYPE.NODE,
+        payload: { status: NODE_STATUS.VISITED, node: nodes[idx] },
+      });
+    },
+    (idx) => {
+      algorithmPresentationSubject.next({
+        type: RUN_EVENT_TYPE.NODE,
+        payload: { status: NODE_STATUS.FOUND, node: nodes[idx] },
+      });
+    }
+  );
+
+  for (let idx = 0; idx < path.length; idx++) {
+    if (idx !== 0 && idx !== path.length - 1) {
+      algorithmPresentationSubject.next({
+        type: RUN_EVENT_TYPE.NODE,
+        payload: { status: NODE_STATUS.PATH, node: nodes[path[idx]] },
+      });
+    }
+    if (idx !== path.length - 1) {
+      algorithmPresentationSubject.next({
+        type: RUN_EVENT_TYPE.EDGE,
+        payload: {
+          originNode: nodes[path[idx]],
+          targetNode: nodes[path[idx + 1]],
+        },
+      });
+    }
+  }
+
+  algorithmPresentationSubject.next({
+    type: RUN_EVENT_TYPE.END,
+    payload: { path },
+  });
+}
+
+function handleRunModeClick(payload) {
+  if (!payload.target) return;
+  originNodeSubject.next(payload.target);
+}
+
+function handleRunMode(payload) {
+  const { algorithm, origin } = payload;
+  runAlgorithmPresentation(algorithm, origin);
+}
+
+function handleRunAlgorithmComparissonMode(payload) {
+  const { algorithm, origin } = payload;
+  handleCloseComparissonModal();
+  runAlgorithmPresentation(algorithm, origin);
+  paint();
+}
+
+function handleFinishComparisson() {
+  algorithmSubject.next(null);
+  originNodeSubject.next(null);
+  handleCloseComparissonModal();
+}
+
+function handleCloseComparissonModal() {
+  comparisson_modal_container.classList.remove("open");
+
+  comparisson_modal_container
+    .querySelectorAll("button[data-id]")
+    .forEach((button) => {
+      button.removeEventListener("click", handleComparissonAlgorithmClick);
+    });
+  window.removeEventListener("click", handleFinishComparisson);
+}
+
+function handleComparissonAlgorithmClick(e) {
+  e.stopPropagation();
+  const algorithmName = e.target.getAttribute("data-id");
+
+  algorithmSubject.next(search.makeAlgorithm(algorithmName));
 }
 
 function closeAlgorithmsModal() {
@@ -262,26 +380,25 @@ function closeAlgorithmsModal() {
 
   window.removeEventListener("click", closeAlgorithmsModal);
   algorithms_modal_container.querySelectorAll("button").forEach((btn) => {
-    btn.removeEventListener("click", handleSelectAlgorithm);
+    btn.removeEventListener("click", handleAlgorithmButtonClick);
   });
 }
 
-function handleSelectAlgorithm(e) {
-  mode = MODE.RUN;
+function handleAlgorithmButtonClick(e) {
   const algorithmName = e.target.getAttribute("data-id");
-  algorithm = search.makeAlgorithm(algorithmName);
+
+  modeSubject.next(MODE.RUN);
+  algorithmSubject.next(search.makeAlgorithm(algorithmName));
 }
 
-function handleCloseResultsModel() {
-  origin_node = null;
-  mode = MODE.SANDBOX;
-
-  paint();
+function handleCloseResultsModal() {
+  originNodeSubject.next(null);
+  modeSubject.next(MODE.SANDBOX);
 
   result_modal_container.classList.remove("open");
   result_modal_container
     .querySelector('button[data-id="continue"]')
-    .removeEventListener("click", handleCloseResultsModel);
+    .removeEventListener("click", handleCloseResultsModal);
 }
 
 function handleOpenResultModel(path) {
@@ -297,16 +414,30 @@ function handleOpenResultModel(path) {
 
   result_modal_container
     .querySelector('button[data-id="continue"]')
-    .addEventListener("click", handleCloseResultsModel);
+    .addEventListener("click", handleCloseResultsModal);
 }
 
-container_el.addEventListener("click", (e) => {
-  e.stopPropagation();
+rxjs
+  .fromEvent(container_el, "click")
+  .pipe(
+    rxjs.operators.tap((e) => e.stopPropagation()),
+    rxjs.operators.withLatestFrom(modeSubject)
+  )
+  .subscribe((data) => {
+    const [e, mode] = data;
+    const position = [e.x, e.y];
+    const targetIdx = creator.getNode(nodes, position);
+    const payload = {
+      mode,
+      position,
+      targetIdx,
+      target: nodes[targetIdx],
+      ctrlKey: e.ctrlKey,
+      altKey: e.altKey,
+    };
 
-  if (mode === MODE.RUN) handleRunMode(e);
-  else if (mode === MODE.SANDBOX) handleSandboxMode(e);
-  else if (mode === MODE.COMPARISSON) handleComparissonMode(e);
-});
+    clickSubject.next(payload);
+  });
 
 save_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
@@ -331,12 +462,12 @@ load_btn_el.addEventListener("click", (e) => {
 
 run_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
-  origin_node = null;
+
+  originNodeSubject.next(null);
 
   algorithms_modal_container.classList.add("open");
-
   algorithms_modal_container.querySelectorAll("button").forEach((btn) => {
-    btn.addEventListener("click", handleSelectAlgorithm);
+    btn.addEventListener("click", handleAlgorithmButtonClick);
   });
 
   window.addEventListener("click", closeAlgorithmsModal);
@@ -344,17 +475,15 @@ run_btn_el.addEventListener("click", (e) => {
 
 comparissons_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
-
-  mode = MODE.COMPARISSON;
+  modeSubject.next(MODE.COMPARISSON);
 });
 
 clear_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
-  mode = MODE.SANDBOX;
 
+  modeSubject.next(MODE.SANDBOX);
   matrix = [];
   nodes = [];
-  paint();
 });
 
 (() => {
