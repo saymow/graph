@@ -237,9 +237,10 @@ export function getPathInformation(nodes, path) {
 }
 
 export function handleOpenResultModal(payload) {
-  const { path, nodes } = payload;
+  const { path, nodes, algorithm } = payload;
   const { finalNode, nodesCount, distance } = getPathInformation(nodes, path);
 
+  Ctx().resultModalContainerEl.querySelector("h1").textContent = algorithm.name;
   Ctx().resultModalContainerEl.querySelector('[data-id="nodes"]').textContent =
     nodesCount;
   Ctx().resultModalContainerEl.querySelector(

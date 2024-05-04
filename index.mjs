@@ -187,13 +187,15 @@ Ctx()
       rxjs.of(event).pipe(rxjs.operators.delay(200))
     ),
     rxjs.operators.withLatestFrom(Ctx().$mode),
+    rxjs.operators.withLatestFrom(Ctx().$algorithm),
     rxjs.operators.filter(
-      ([event, mode]) => mode === MODE.RUN && event.type === RUN_EVENT_TYPE.END
+      ([[event, mode]]) => mode === MODE.RUN && event.type === RUN_EVENT_TYPE.END
     ),
-    rxjs.operators.map(([event]) => ({
+    rxjs.operators.map(([[event], algorithm]) => ({
       path: event.payload.path,
       nodes,
       matrix,
+      algorithm
     }))
   )
   .subscribe(handlers.handleOpenResultModal);
