@@ -87,9 +87,9 @@ modeSubject.subscribe((mode) => {
 
   modeBtnEls.forEach((modeBtnEl) => {
     if (modeBtnEl === activeModeBtnEl) {
-      modeBtnEl.removeAttribute("inactive");
+      modeBtnEl.setAttribute("hightlight", "hightlight");
     } else {
-      modeBtnEl.setAttribute("inactive", "inactive");
+      modeBtnEl.removeAttribute("hightlight");
     }
   });
 });
@@ -203,7 +203,7 @@ algorithmPresentationSubject
     ),
     rxjs.operators.map(([event]) => event)
   )
-  .subscribe((event) => handleOpenResultModel(event.payload.path));
+  .subscribe((event) => handleOpenResultModal(event.payload.path));
 
 originNodeSubject.subscribe((origin) => ({ origin }));
 
@@ -411,7 +411,7 @@ function handleAlgorithmButtonClick(e) {
 
 function handleCloseResultsModal() {
   originNodeSubject.next(null);
-  modeSubject.next(MODE.SANDBOX);
+  algorithmSubject.next(null);
 
   result_modal_container.classList.remove("open");
   result_modal_container
@@ -419,7 +419,7 @@ function handleCloseResultsModal() {
     .removeEventListener("click", handleCloseResultsModal);
 }
 
-function handleOpenResultModel(path) {
+function handleOpenResultModal(path) {
   const nodes_path = path.map((nodeIdx) => nodes[nodeIdx]);
   const nodes_count = path.length - 1;
   const distance = computePathDistance(nodes_path).toFixed(2);
