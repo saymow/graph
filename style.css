@@ -29,6 +29,11 @@ button {
   cursor: pointer;
 }
 
+button[inactive] {
+  background: white;
+  color: purple;
+}
+
 button:hover {
   opacity: 0.8;
 }
@@ -47,6 +52,25 @@ button:hover {
   box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.37);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+}
+
+.mode-controls {
+  display: flex;
+  border: 1px solid purple;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.mode-controls button {
+  border-radius: 0;
+}
+
+.mode-controls button:not(:first-child) {
+  border-left: 1px solid white;
+}
+
+.mode-controls button:not(:first-child)[inactive] {
+  border-left: 1px solid purple;
 }
 
 .modal-container {

@@ -11,6 +11,7 @@ import {
 } from "./constants.mjs";
 
 const container_el = document.querySelector("#app");
+const sandbox_btn_el = document.querySelector("#sandbox-btn");
 const save_btn_el = document.querySelector("#save-btn");
 const load_btn_el = document.querySelector("#load-btn");
 const run_btn_el = document.querySelector("#run-btn");
@@ -73,6 +74,24 @@ function paint(origin_node_idx) {
 
 addNodeSubject.subscribe((node) => creator.addNode(matrix, nodes, node));
 addEdgeSubject.subscribe((edge) => creator.addEdge(matrix, edge));
+
+modeSubject.subscribe((mode) => {
+  let activeModeBtnEl;
+
+  if (mode === MODE.SANDBOX) activeModeBtnEl = sandbox_btn_el;
+  else if (mode === MODE.RUN) activeModeBtnEl = run_btn_el;
+  else activeModeBtnEl = comparissons_btn_el;
+
+  const modeBtnEls = [sandbox_btn_el, run_btn_el, comparissons_btn_el];
+
+  modeBtnEls.forEach((modeBtnEl) => {
+    if (modeBtnEl === activeModeBtnEl) {
+      modeBtnEl.removeAttribute("inactive");
+    } else {
+      modeBtnEl.setAttribute("inactive", "inactive");
+    }
+  });
+});
 
 rxjs
   .merge(originNodeSubject, modeSubject, addNodeSubject, addEdgeSubject)
@@ -196,8 +215,6 @@ algorithmPresentationSubject
     rxjs.operators.withLatestFrom(originNodeSubject),
     rxjs.operators.filter((d) => {
       const [[event, mode], origin] = d;
-
-      console.log(d);
 
       return (
         mode === MODE.COMPARISSON && origin && event.type === RUN_EVENT_TYPE.END
@@ -460,9 +477,17 @@ load_btn_el.addEventListener("click", (e) => {
   load(config);
 });
 
+sandbox_btn_el.addEventListener("click", (e) => {
+  e.stopPropagation();
+  algorithmSubject.next(null);
+  originNodeSubject.next(null);
+  modeSubject.next(MODE.SANDBOX);
+});
+
 run_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
 
+  algorithmSubject.next(null);
   originNodeSubject.next(null);
 
   algorithms_modal_container.classList.add("open");
@@ -475,6 +500,8 @@ run_btn_el.addEventListener("click", (e) => {
 
 comparissons_btn_el.addEventListener("click", (e) => {
   e.stopPropagation();
+  algorithmSubject.next(null);
+  originNodeSubject.next(null);
   modeSubject.next(MODE.COMPARISSON);
 });
 
