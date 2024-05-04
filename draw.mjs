@@ -6,7 +6,7 @@ import {
 } from "./constants.mjs";
 import { getDistance } from "./utils.mjs";
 
-function makeFinalNodeText(nodes, node) {
+export function makeFinalNodeText(nodes, node) {
   const nodeIdx = nodes.indexOf(node);
   let count = 0;
 

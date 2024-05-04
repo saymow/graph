@@ -1,6 +1,6 @@
 import * as creator from "./creator.mjs";
 import * as draw from "./draw.mjs";
-import * as search from "./search.mjs";
+import * as algorithms from "./algorithms-metadata.mjs";
 import { computePathDistance } from "./utils.mjs";
 import {
   LOCAL_STORAGE_KEY,
@@ -39,7 +39,6 @@ const algorithmSubject = new rxjs.BehaviorSubject();
 
 let nodes = [];
 let matrix = [];
-let algorithm;
 
 function setUpCanvas() {
   canvas_el.width = canvas_el.clientWidth;
@@ -266,32 +265,77 @@ function handleComparissonMode(payload) {
 
   draw.drawHighlightedNode(ctx, nodes, target);
 
-  comparisson_modal_container
-    .querySelectorAll("li[data-id]")
-    .forEach((algorithm_section) => {
-      const algorithmName = algorithm_section.getAttribute("data-id");
-      const algorithm = search.makeAlgorithm(algorithmName);
-      const path = algorithm(
-        nodes,
-        matrix,
-        targetIdx,
-        () => {},
-        () => {},
-        () => {}
-      );
+  const containerEl = document.querySelector('[data-id="algorithm-metrics"]');
 
-      const nodes_path = path.map((nodeIdx) => nodes[nodeIdx]);
-      const nodes_count = path.length - 1;
-      const distance = computePathDistance(nodes_path).toFixed(2);
+  containerEl.innerHTML = "";
+  algorithms.getAll().forEach((algorithm) => {
+    const path = algorithm.handle(
+      nodes,
+      matrix,
+      targetIdx,
+      () => {},
+      () => {},
+      () => {}
+    );
 
-      algorithm_section.querySelector('[data-id="nodes"]').textContent =
-        nodes_count;
-      algorithm_section.querySelector('[data-id="distance"]').textContent =
-        distance;
-      algorithm_section
-        .querySelector("button")
-        .addEventListener("click", handleComparissonAlgorithmClick);
-    });
+    const { distance, nodesCount, finalNode } = getPathInformation(path);
+
+    const liEl = document.createElement("li");
+    const articleEl = document.createElement("article");
+    const headerEl = document.createElement("header");
+    const h3El = document.createElement("h3");
+    const sectionEl = document.createElement("section");
+    const nodesArticleEl = document.createElement("article");
+    const nodesArticleKeyEl = document.createElement("span");
+    const nodesArticleValueEl = document.createElement("span");
+    const distanceArticleEl = document.createElement("article");
+    const distanceArticleKeyEl = document.createElement("span");
+    const distanceArticleValueEl = document.createElement("span");
+    const finalNodeArticleEl = document.createElement("article");
+    const finalNodeArticleKeyEl = document.createElement("span");
+    const finalNodeArticleValueEl = document.createElement("span");
+    const runArticleEl = document.createElement("article");
+    const nodesArticleBtnEl = document.createElement("button");
+
+    articleEl.classList.add("data-container");
+
+    h3El.textContent = algorithm.name;
+
+    nodesArticleKeyEl.textContent = "Nodes";
+    nodesArticleValueEl.textContent = nodesCount;
+    nodesArticleEl.appendChild(nodesArticleKeyEl);
+    nodesArticleEl.appendChild(nodesArticleValueEl);
+
+    distanceArticleKeyEl.textContent = "Distance";
+    distanceArticleValueEl.textContent = distance;
+    distanceArticleEl.appendChild(distanceArticleKeyEl);
+    distanceArticleEl.appendChild(distanceArticleValueEl);
+
+    finalNodeArticleKeyEl.textContent = "Final Node";
+    finalNodeArticleValueEl.textContent = finalNode;
+    finalNodeArticleEl.appendChild(finalNodeArticleKeyEl);
+    finalNodeArticleEl.appendChild(finalNodeArticleValueEl);
+
+    nodesArticleBtnEl.textContent = "Run";
+    nodesArticleBtnEl.setAttribute("data-id", algorithm.id);
+    nodesArticleBtnEl.addEventListener(
+      "click",
+      handleComparissonAlgorithmClick
+    );
+    runArticleEl.appendChild(nodesArticleBtnEl);
+
+    headerEl.appendChild(h3El);
+
+    sectionEl.appendChild(nodesArticleEl);
+    sectionEl.appendChild(distanceArticleEl);
+    sectionEl.appendChild(finalNodeArticleEl);
+    sectionEl.appendChild(runArticleEl);
+
+    articleEl.appendChild(headerEl);
+    articleEl.appendChild(sectionEl);
+    liEl.appendChild(articleEl);
+    containerEl.appendChild(liEl);
+  });
 
   comparisson_modal_container.classList.add("open");
   window.addEventListener("click", handleFinishComparisson);
@@ -359,13 +403,13 @@ function handleRunModeClick(payload) {
 
 function handleRunMode(payload) {
   const { algorithm, origin } = payload;
-  runAlgorithmPresentation(algorithm, origin);
+  runAlgorithmPresentation(algorithm.handle, origin);
 }
 
 function handleRunAlgorithmComparissonMode(payload) {
   const { algorithm, origin } = payload;
   handleCloseComparissonModal();
-  runAlgorithmPresentation(algorithm, origin);
+  runAlgorithmPresentation(algorithm.handle, origin);
   paint();
 }
 
@@ -390,7 +434,7 @@ function handleComparissonAlgorithmClick(e) {
   e.stopPropagation();
   const algorithmName = e.target.getAttribute("data-id");
 
-  algorithmSubject.next(search.makeAlgorithm(algorithmName));
+  algorithmSubject.next(algorithms.makeAlgorithm(algorithmName));
 }
 
 function closeAlgorithmsModal() {
@@ -406,7 +450,7 @@ function handleAlgorithmButtonClick(e) {
   const algorithmName = e.target.getAttribute("data-id");
 
   modeSubject.next(MODE.RUN);
-  algorithmSubject.next(search.makeAlgorithm(algorithmName));
+  algorithmSubject.next(algorithms.makeAlgorithm(algorithmName));
 }
 
 function handleCloseResultsModal() {
@@ -419,15 +463,30 @@ function handleCloseResultsModal() {
     .removeEventListener("click", handleCloseResultsModal);
 }
 
+function getPathInformation(path) {
+  const finalNode = nodes[path[0]];
+
+  if (finalNode.type === NODE_TYPE.NORMAL) {
+    return null;
+  }
+
+  const nodesPath = path.map((nodeIdx) => nodes[nodeIdx]);
+  const nodesCount = path.length - 1;
+  const distance = computePathDistance(nodesPath).toFixed(2);
+  const finalNodeText = draw.makeFinalNodeText(nodes, finalNode);
+
+  return { nodesCount, distance, finalNode: finalNodeText };
+}
+
 function handleOpenResultModal(path) {
-  const nodes_path = path.map((nodeIdx) => nodes[nodeIdx]);
-  const nodes_count = path.length - 1;
-  const distance = computePathDistance(nodes_path).toFixed(2);
+  const { finalNode, nodesCount, distance } = getPathInformation(path);
 
   result_modal_container.querySelector('[data-id="nodes"]').textContent =
-    nodes_count;
+    nodesCount;
   result_modal_container.querySelector('[data-id="distance"]').textContent =
     distance;
+  result_modal_container.querySelector('[data-id="final-node"]').textContent =
+    finalNode;
   result_modal_container.classList.add("open");
 
   result_modal_container
@@ -514,10 +573,26 @@ clear_btn_el.addEventListener("click", (e) => {
   nodes = [];
 });
 
+function loadAlgorithmsOptions() {
+  const containerEl = document.querySelector('[data-id="algorithm-options"]');
+
+  algorithms.getAll().forEach((algorithm) => {
+    const liEl = document.createElement("li");
+    const buttonEl = document.createElement("button");
+
+    buttonEl.textContent = algorithm.name;
+    buttonEl.setAttribute("data-id", algorithm.id);
+    liEl.appendChild(buttonEl);
+    containerEl.appendChild(buttonEl);
+  });
+}
+
 (() => {
   setUpCanvas();
 
   const config = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+  loadAlgorithmsOptions();
 
   if (config) {
     load(JSON.parse(config));

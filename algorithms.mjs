@@ -1,18 +1,6 @@
 import { NODE_TYPE } from "./constants.mjs";
 import { getDistance, swap } from "./utils.mjs";
 
-export const makeAlgorithm = (algorithName) => {
-  if (algorithName === "bfs") {
-    return bfs;
-  } else if (algorithName === "dfs") {
-    return dfs;
-  } else if (algorithName === "best-first-search") {
-    return best_first_search;
-  }
-
-  return null;
-};
-
 export const bfs = (nodes, matrix, originIdx, onDiscover, onVisit, onFind) => {
   const discovered = new Array(nodes.length).fill(0);
   const order = new Array(nodes.length).fill(-1);
@@ -97,7 +85,7 @@ const computueMinDistance = (node, finalNodes) => {
   return Math.min(...distances);
 };
 
-export const best_first_search = (
+export const bestFirstSearch = (
   nodes,
   matrix,
   originIdx,
@@ -108,7 +96,9 @@ export const best_first_search = (
   const discovered = new Array(nodes.length).fill(0);
   const order = new Array(nodes.length).fill(-1);
   const finalNodes = nodes.filter((node) => node.type === NODE_TYPE.FINAL);
-  const priorityQueue = [[originIdx, computueMinDistance(nodes[originIdx], finalNodes)]];
+  const priorityQueue = [
+    [originIdx, computueMinDistance(nodes[originIdx], finalNodes)],
+  ];
   let priorityQueueLen = 1;
   const path = [];
   let nodeIdx;

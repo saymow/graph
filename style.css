@@ -101,7 +101,7 @@ button:hover {
   box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.37);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  max-width: 30rem;
+  max-width: 32rem;
 }
 
 .modal.bottom {
@@ -193,4 +193,5 @@ button:hover {
 #algorithm-comparissons-modal .data-container section span:last-child {
   color: purple;
   font-weight: bold;
+  margin-left: .2rem;
 }
