@@ -9,6 +9,11 @@ export const getAll = () => {
       name: "Best First Search",
       handle: algorithms.bestFirstSearch,
     },
+    {
+      id: "a-star",
+      name: "A*",
+      handle: algorithms.AStar,
+    },
   ];
 };
 

@@ -28,3 +28,41 @@ export const swap = (arr, i, j) => {
   arr[i] = arr[j];
   arr[j] = tmp;
 };
+
+export class PriorityQueue {
+  /** @typedef {{ item: any, weight: number }} Item */
+
+  /**@type {Item[]} */
+  #items = [];
+
+  /** @arg {Item[]} initialItems */
+  constructor(initialItems) {
+    this.#items = initialItems;
+  }
+
+  /** @arg {Item} item */
+  add(item) {
+    let i = 0;
+
+    while (i < this.#items.length && this.#items[i].weight > item.weight) {
+      i++;
+    }
+
+    for (let j = this.#items.length; j > i; j--) {
+      swap(this.#items, j, j - 1);
+    }
+
+    this.#items[i] = item;
+  }
+
+  /** @return {Item|null}  */
+  pop() {
+    if (this.empty()) return null;
+    return this.#items.pop();
+  }
+
+  /** @return {boolean}  */
+  empty() {
+    return this.#items.length === 0;
+  }
+}
