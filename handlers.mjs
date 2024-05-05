@@ -10,6 +10,7 @@ import * as algorithms from "./algorithms-metadata.mjs";
 import * as elements from "./elements.mjs";
 import * as draw from "./draw.mjs";
 import { computePathDistance } from "./utils.mjs";
+import InitialGraph from "./initial-graph.mjs";
 
 function setUpCanvas() {
   Ctx().canvasEl.width = Ctx().canvasEl.clientWidth;
@@ -24,7 +25,15 @@ export function handleStartup() {
 
   if (json) {
     Ctx().$graph.next(JSON.parse(json));
+  } else {
+    handleLoadPreset();
   }
+}
+
+export function handleLoadPreset() {
+  Ctx().$graph.next(JSON.parse(JSON.stringify(InitialGraph)));
+  Ctx().$algorithm.next(null);
+  Ctx().$originNode.next(null);
 }
 
 export function handleClick(data) {
@@ -69,7 +78,6 @@ export function handleChangeMode(mode) {
 }
 
 export function handleClear() {
-  handleChangeMode(MODE.SANDBOX);
   Ctx().$graph.next({ nodes: [], matrix: [] });
   Ctx().$algorithm.next(null);
   Ctx().$originNode.next(null);

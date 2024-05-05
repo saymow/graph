@@ -188,7 +188,7 @@ rxjs
 rxjs
   .fromEvent(Ctx().loadBtnEl, "click")
   .pipe(rxjs.operators.tap((e) => e.stopPropagation()))
-  .subscribe(handlers.handleSave);
+  .subscribe(handlers.handleLoad);
 
 rxjs
   .fromEvent(Ctx().sandboxBtnEl, "click")
@@ -212,5 +212,10 @@ rxjs
     rxjs.operators.mergeMap(() => Ctx().$graph.pipe(rxjs.operators.take(1)))
   )
   .subscribe(handlers.handleClear);
+
+rxjs
+  .fromEvent(Ctx().loadPresetBtnEl, "click")
+  .pipe(rxjs.operators.tap((e) => e.stopPropagation()))
+  .subscribe(handlers.handleLoadPreset);
 
 handlers.handleStartup();

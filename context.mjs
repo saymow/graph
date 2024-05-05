@@ -5,6 +5,7 @@ const containerEl = document.querySelector("#app");
 const sandboxBtnEl = document.querySelector("#sandbox-btn");
 const saveBtnEl = document.querySelector("#save-btn");
 const loadBtnEl = document.querySelector("#load-btn");
+const loadPresetBtnEl = document.querySelector("#load-preset-btn");
 const runBtnEl = document.querySelector("#run-btn");
 const clearBtnEl = document.querySelector("#clear-btn");
 const comparissonsBtnEl = document.querySelector("#comparissons-btn");
@@ -90,6 +91,7 @@ export const Ctx = () => ({
   sandboxBtnEl,
   saveBtnEl,
   loadBtnEl,
+  loadPresetBtnEl,
   runBtnEl,
   clearBtnEl,
   comparissonsBtnEl,
