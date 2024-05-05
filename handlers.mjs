@@ -301,7 +301,7 @@ export function getPathInformation(nodes, path) {
   const finalNode = nodes[path[0]];
 
   if (finalNode.type === NODE_TYPE.NORMAL) {
-    return null;
+    return { finalNode: -1, nodesCount: -1, distance: -1 };
   }
 
   const nodesPath = path.map((nodeIdx) => nodes[nodeIdx]);
