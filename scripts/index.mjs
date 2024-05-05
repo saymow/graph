@@ -218,4 +218,27 @@ rxjs
   .pipe(rxjs.operators.tap((e) => e.stopPropagation()))
   .subscribe(handlers.handleLoadPreset);
 
+rxjs
+  .fromEvent(window, "click")
+  .pipe(
+    rxjs.operators.filter((e) => !Ctx().tutorialModalEl.contains(e.target)),
+    rxjs.operators.take(1)
+  )
+  .subscribe(handlers.handleCloseTutorialModal);
+
+rxjs
+  .fromEvent(Ctx().tutorialModeControlsEl, "click")
+  .pipe(
+    rxjs.operators.map((e) =>
+      Array.from(Ctx().tutorialModeControlsEl.querySelectorAll("button")).find(
+        (buttonEl) => buttonEl.contains(e.target)
+      )
+    ),
+    rxjs.operators.takeWhile(() =>
+      Ctx().tutorialModalContainerEl.classList.contains("open")
+    ),
+    rxjs.operators.map((buttonEl) => buttonEl.getAttribute("data-id"))
+  )
+  .subscribe(handlers.handleTutorialModeChange);
+
 handlers.handleStartup();

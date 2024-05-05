@@ -6,7 +6,13 @@
     <title>Graph Search</title>
 
     <link rel="stylesheet" href="style.css" />
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="app">
@@ -22,6 +28,82 @@
         <button id="load-btn">Load</button>
         <button id="load-preset-btn">Load preset</button>
       </header>
+    </div>
+    <div class="modal-container open" id="tutorial-modal-container">
+      <section id="tutorial-modal" class="modal">
+        <h1>TUTORIAL</h1>
+        <article class="modes-tutorial-container">
+          <section class="mode-controls">
+            <button id="sandbox-btn" data-id="sandbox" highlight>Sandbox</button>
+            <button id="run-btn" data-id="run">Run</button>
+            <button id="comparissons-btn" data-id="comparisson">Comparisson</button>
+          </section>
+          <section id="comparisson-mode-doc" data-id="comparisson" class="mode-tutorial">
+            <img
+              src="/media/comparisson-mode.gif"
+              alt="Video of comparisson mode in use"
+            />
+          </section>
+          <section id="run-mode-doc" data-id="run" class="mode-tutorial hidden">
+            <img src="/media/run-mode.gif" alt="Video of run mode in use" />
+          </section>
+          <section id="sandbox-mode-doc" data-id="sandbox" class="mode-tutorial hidden">
+            <img
+              src="/media/sandbox-mode.gif"
+              alt="Video of Sandbox mode in use"
+            />
+            <p><strong>Click</strong>: Create a basic node.</p>
+            <p><strong>Alt + Click</strong>: Create a final node.</p>
+            <p>
+              <strong>Ctrl + Click</strong>: Select a node. When two nodes is
+              selected in sequence, an edge is created between them.
+            </p>
+          </section>
+        </article>
+        <article class="additional-tutorial-container">
+          <h2>NODES</h2>
+          <section class="node-doc">
+            <span class="node basic"></span>
+            <p>Basic node</p>
+          </section>
+
+          <section class="node-doc">
+            <span class="node discovered"></span>
+            <p>Discovered node</p>
+          </section>
+          <section class="node-doc">
+            <span class="node visited"></span>
+            <p>Visited node</p>
+          </section>
+          <section class="node-doc">
+            <span class="node path"></span>
+            <p>Path node</p>
+          </section>
+          <section class="node-doc">
+            <span class="node final">0</span>
+            <p>Final node</p>
+          </section>
+        </article>
+        <article class="additional-tutorial-container">
+          <h2>ADDITIONAL</h2>
+          <section class="button-doc">
+            <button>Clear</button>
+            <p>Start new graph</p>
+          </section>
+          <section class="button-doc">
+            <button>Save</button>
+            <p>Save the graph locally and on the <strong>CTRL + V</strong></p>
+          </section>
+          <section class="button-doc">
+            <button>Load</button>
+            <p>Load a graph from a JSON previosly saved</p>
+          </section>
+          <section class="button-doc">
+            <button>Load Preset</button>
+            <p>Load the initial graph</p>
+          </section>
+        </article>
+      </section>
     </div>
     <div class="modal-container" id="algorithm-modal-container">
       <section id="algorithm-modal" class="modal">

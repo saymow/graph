@@ -10,6 +10,11 @@ const runBtnEl = document.querySelector("#run-btn");
 const clearBtnEl = document.querySelector("#clear-btn");
 const comparissonsBtnEl = document.querySelector("#comparissons-btn");
 const canvasEl = document.querySelector("canvas");
+const tutorialModalContainerEl = document.querySelector(
+  "#tutorial-modal-container"
+);
+const tutorialModalEl = document.querySelector("#tutorial-modal");
+const tutorialModeControlsEl = tutorialModalEl.querySelector(".mode-controls");
 const algorithmsModalContainerEl = document.querySelector(
   "#algorithm-modal-container"
 );
@@ -103,4 +108,7 @@ export const Ctx = () => ({
   resultModalContainerEl,
   comparissonModalContainerEl,
   canvasCtx,
+  tutorialModalContainerEl,
+  tutorialModalEl,
+  tutorialModeControlsEl,
 });

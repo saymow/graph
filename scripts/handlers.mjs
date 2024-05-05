@@ -17,6 +17,35 @@ function setUpCanvas() {
   Ctx().canvasEl.height = Ctx().canvasEl.clientHeight;
 }
 
+export function handleCloseTutorialModal() {
+  Ctx().tutorialModalContainerEl.classList.remove("open");
+}
+
+export function handleTutorialModeChange(mode) {
+  const activeModeSectionEl = Ctx().tutorialModalEl.querySelector(
+    `.mode-tutorial[data-id="${mode}"]`
+  );
+  const modeSectionsEls =
+    Ctx().tutorialModalEl.querySelectorAll(".mode-tutorial");
+  const modeButtonEls = Ctx().tutorialModalEl.querySelectorAll("button");
+
+  for (const modeSectionEl of modeSectionsEls) {
+    if (modeSectionEl === activeModeSectionEl) {
+      modeSectionEl.classList.remove("hidden");
+    } else {
+      modeSectionEl.classList.add("hidden");
+    }
+  }
+
+  for (const modeButtonEl of modeButtonEls) {
+    if (modeButtonEl.getAttribute("data-id") === mode) {
+      modeButtonEl.setAttribute("highlight", "highlight");
+    } else {
+      modeButtonEl.removeAttribute("highlight");
+    }
+  }
+}
+
 export function handleStartup() {
   setUpCanvas();
   handleLoadAlgorithmsOptions();
