@@ -1,12 +1,81 @@
 import { Ctx } from "./context.mjs";
-import { MODE, RUN_EVENT_TYPE, NODE_STATUS, NODE_TYPE } from "./constants.mjs";
+import {
+  MODE,
+  RUN_EVENT_TYPE,
+  NODE_STATUS,
+  NODE_TYPE,
+  LOCAL_STORAGE_KEY,
+} from "./constants.mjs";
 import * as algorithms from "./algorithms-metadata.mjs";
 import * as elements from "./elements.mjs";
 import * as draw from "./draw.mjs";
-import * as creator from "./creator.mjs";
 import { computePathDistance } from "./utils.mjs";
 
-export function handleModeChanges(mode) {
+function setUpCanvas() {
+  Ctx().canvasEl.width = Ctx().canvasEl.clientWidth;
+  Ctx().canvasEl.height = Ctx().canvasEl.clientHeight;
+}
+
+export function handleStartup() {
+  setUpCanvas();
+  handleLoadAlgorithmsOptions();
+
+  const json = localStorage.getItem(LOCAL_STORAGE_KEY);
+
+  if (json) {
+    Ctx().$graph.next(JSON.parse(json));
+  }
+}
+
+export function handleClick(data) {
+  const { mode, event } = data;
+  const position = [event.x, event.y];
+
+  Ctx()
+    .getNode(position)
+    .pipe(rxjs.withLatestFrom(Ctx().$graph), rxjs.operators.take(1))
+    .subscribe(([targetIdx, graph]) => {
+      const payload = {
+        graph,
+        mode,
+        position,
+        targetIdx,
+        target: graph.nodes[targetIdx],
+        ctrlKey: event.ctrlKey,
+        altKey: event.altKey,
+      };
+
+      Ctx().$click.next(payload);
+    });
+}
+
+export function handleLoad() {
+  const config = JSON.parse(window.prompt("Enter graph: "));
+  Ctx().$graph.next(config);
+}
+
+export function handleSave(graph) {
+  const json = JSON.stringify(graph);
+  localStorage.setItem(LOCAL_STORAGE_KEY, json);
+  navigator.clipboard.writeText(json);
+
+  alert("Graph is copied");
+}
+
+export function handleChangeMode(mode) {
+  Ctx().$algorithm.next(null);
+  Ctx().$originNode.next(null);
+  Ctx().$mode.next(mode);
+}
+
+export function handleClear(graph) {
+  handleChangeMode(MODE.SANDBOX);
+  Ctx().$graph.next({ nodes: [], matrix: [] });
+  Ctx().$algorithm.next(null);
+  Ctx().$originNode.next(null);
+}
+
+export function onModeChange(mode) {
   let activeModeBtnEl;
 
   if (mode === MODE.SANDBOX) activeModeBtnEl = Ctx().sandboxBtnEl;
@@ -29,7 +98,11 @@ export function handleModeChanges(mode) {
 }
 
 export function handleRunAlgorithmPresentation(payload) {
-  const { algorithm, origin, nodes, matrix } = payload;
+  const {
+    algorithm,
+    origin,
+    graph: { nodes, matrix },
+  } = payload;
   const targetIdx = nodes.indexOf(origin);
 
   draw.drawHighlightedNode(Ctx().canvasCtx, nodes, origin);
@@ -85,7 +158,7 @@ export function handleRunAlgorithmPresentation(payload) {
 }
 
 export function handleSandboxModeClick(payload) {
-  const { nodes, position, targetIdx } = payload;
+  const { graph, position, targetIdx } = payload;
 
   Ctx()
     .$originNode.pipe(rxjs.operators.take(1))
@@ -97,21 +170,21 @@ export function handleSandboxModeClick(payload) {
         }
 
         if (!originNode) {
-          Ctx().$originNode.next(nodes[targetIdx]);
+          Ctx().$originNode.next(graph.nodes[targetIdx]);
         } else {
-          const originNodeIdx = nodes.indexOf(originNode);
+          const originNodeIdx = graph.nodes.indexOf(originNode);
           const targetNodeIdx = targetIdx;
 
-          Ctx().$addEdge.next([originNodeIdx, targetNodeIdx]);
           Ctx().$originNode.next(null);
+          Ctx().addEdge([originNodeIdx, targetNodeIdx]);
         }
       } else {
-        if (creator.getNode(nodes, position) !== -1) return;
+        if (targetIdx !== -1) return;
 
         const type = payload.altKey ? NODE_TYPE.FINAL : NODE_TYPE.NORMAL;
 
         Ctx().$originNode.next(null);
-        Ctx().$addNode.next({ type, pos: position });
+        Ctx().addNode({ type, pos: position });
       }
     });
 }
@@ -122,7 +195,10 @@ export function handleComparissonModeClick(payload) {
 }
 
 export function handleComparissonMode(payload) {
-  const { origin: target, nodes, matrix } = payload;
+  const {
+    origin: target,
+    graph: { nodes, matrix },
+  } = payload;
   const targetIdx = nodes.indexOf(target);
 
   draw.drawHighlightedNode(Ctx().canvasCtx, nodes, target);
@@ -237,8 +313,11 @@ export function getPathInformation(nodes, path) {
 }
 
 export function handleOpenResultModal(payload) {
-  const { path, nodes, algorithm } = payload;
-  const { finalNode, nodesCount, distance } = getPathInformation(nodes, path);
+  const { path, graph, algorithm } = payload;
+  const { finalNode, nodesCount, distance } = getPathInformation(
+    graph.nodes,
+    path
+  );
 
   Ctx().resultModalContainerEl.querySelector("h1").textContent = algorithm.name;
   Ctx().resultModalContainerEl.querySelector('[data-id="nodes"]').textContent =

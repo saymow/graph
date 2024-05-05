@@ -1,8 +1,11 @@
+import { Ctx } from "./context.mjs";
 import { drawCircle, drawEdge as canvasDrawEdge } from "./canvas.mjs";
 import {
   NORMAL_NODE_RADIUS,
   SPECIAL_NODE_RADIUS,
   NODE_TYPE,
+  RUN_EVENT_TYPE,
+  NODE_STATUS,
 } from "./constants.mjs";
 import { getDistance } from "./utils.mjs";
 
@@ -57,7 +60,7 @@ function makeCircle(nodes, node, fillStyle, strokeStyle) {
   };
 }
 
-export function drawNode(ctx, nodes, node) {
+function drawNode(ctx, nodes, node) {
   drawCircle(
     ctx,
     makeCircle(
@@ -69,7 +72,7 @@ export function drawNode(ctx, nodes, node) {
   );
 }
 
-export function drawEdge(ctx, originNode, targetNode) {
+function drawEdge(ctx, originNode, targetNode) {
   canvasDrawEdge(ctx, {
     a: {
       x: originNode.pos[0],
@@ -83,7 +86,7 @@ export function drawEdge(ctx, originNode, targetNode) {
   });
 }
 
-export function drawHighlightedEdge(ctx, originNode, targetNode) {
+function drawHighlightedEdge(ctx, originNode, targetNode) {
   canvasDrawEdge(ctx, {
     a: {
       x: originNode.pos[0],
@@ -101,18 +104,70 @@ export function drawHighlightedNode(ctx, nodes, node) {
   drawCircle(ctx, makeCircle(nodes, node, "purple", "black"));
 }
 
-export function drawDiscoveredNode(ctx, nodes, node) {
+function drawDiscoveredNode(ctx, nodes, node) {
   drawCircle(ctx, makeCircle(nodes, node, "white", "black"));
 }
 
-export function drawVisitedNode(ctx, nodes, node) {
+function drawVisitedNode(ctx, nodes, node) {
   drawCircle(ctx, makeCircle(nodes, node, "gray", "black"));
 }
 
-export function drawFoundNode(ctx, nodes, node) {
+function drawFoundNode(ctx, nodes, node) {
   drawCircle(ctx, makeCircle(nodes, node, "purple", "black"));
 }
 
-export function drawPathNode(ctx, nodes, node) {
+function drawPathNode(ctx, nodes, node) {
   drawCircle(ctx, makeCircle(nodes, node, "#a54ba1bf", "black"));
+}
+
+export function paint(graph, originNode) {
+  const originNodeIdx = graph.nodes.indexOf(originNode);
+  Ctx().canvasCtx.clearRect(0, 0, Ctx().canvasEl.width, Ctx().canvasEl.height);
+
+  for (let i = 0; i < graph.matrix.length; i++) {
+    for (let j = 0; j < graph.matrix.length; j++) {
+      if (graph.matrix[i][j] === 1) {
+        drawEdge(Ctx().canvasCtx, graph.nodes[i], graph.nodes[j]);
+      }
+    }
+  }
+
+  for (let idx = 0; idx < graph.nodes.length; idx++) {
+    if (idx === originNodeIdx) {
+      drawHighlightedNode(Ctx().canvasCtx, graph.nodes, graph.nodes[idx]);
+    } else {
+      drawNode(Ctx().canvasCtx, graph.nodes, graph.nodes[idx]);
+    }
+  }
+}
+
+export function paintAlgorithmPresentation(data) {
+  const { nodes } = data.graph;
+  const { type, payload } = data.event;
+
+  switch (type) {
+    case RUN_EVENT_TYPE.NODE:
+      switch (payload.status) {
+        case NODE_STATUS.DISCOVERED:
+          drawDiscoveredNode(Ctx().canvasCtx, nodes, payload.node);
+          break;
+        case NODE_STATUS.VISITED:
+          drawVisitedNode(Ctx().canvasCtx, nodes, payload.node);
+          break;
+        case NODE_STATUS.FOUND:
+          drawFoundNode(Ctx().canvasCtx, nodes, payload.node);
+          break;
+        case NODE_STATUS.PATH:
+          drawPathNode(Ctx().canvasCtx, nodes, payload.node);
+          break;
+      }
+      break;
+    case RUN_EVENT_TYPE.EDGE:
+      drawHighlightedEdge(
+        Ctx().canvasCtx,
+        payload.originNode,
+        payload.targetNode
+      );
+      break;
+  }
 }
