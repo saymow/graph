@@ -79,7 +79,7 @@ export const dfs = (nodes, matrix, originIdx, onDiscover, onVisit, onFind) => {
 
 const computueMinDistance = (node, finalNodes) => {
   let distances = finalNodes.map((finalNode) =>
-    getDistance(node.pos, finalNode.pos)
+    getDistance(node.position, finalNode.position)
   );
 
   return Math.min(...distances);
@@ -119,7 +119,7 @@ export const bestFirstSearch = (
       if (matrix[nodeIdx][idx] === 0 || discovered[idx] === 1) continue;
 
       let distances = finalNodes.map((finalNode) =>
-        getDistance(nodes[idx].pos, finalNode.pos)
+        getDistance(nodes[idx].position, finalNode.position)
       );
       let minDistance = Math.min(...distances);
       let i = 0;

@@ -17,7 +17,7 @@ export const computePathDistance = (path) => {
   let distance = 0;
 
   for (let idx = 1; idx < path.length; idx++) {
-    distance += getDistance(path[idx - 1].pos, path[idx].pos);
+    distance += getDistance(path[idx - 1].position, path[idx].position);
   }
 
   return distance;

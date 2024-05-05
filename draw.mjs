@@ -29,7 +29,7 @@ function makeNodeText(nodes, node) {
   for (const item of nodes) {
     if (item.type === NODE_TYPE.FINAL) {
       text = text.concat(
-        `${count}) ${getDistance(node.pos, item.pos).toFixed(2)}\n`
+        `${count}) ${getDistance(node.position, item.position).toFixed(2)}\n`
       );
       count++;
     }
@@ -49,8 +49,8 @@ function makeCircle(nodes, node, fillStyle, strokeStyle) {
   }
 
   return {
-    x: node.pos[0],
-    y: node.pos[1],
+    x: node.position[0],
+    y: node.position[1],
     radius:
       node.type === NODE_TYPE.FINAL ? SPECIAL_NODE_RADIUS : NORMAL_NODE_RADIUS,
     fillStyle,
@@ -75,12 +75,12 @@ function drawNode(ctx, nodes, node) {
 function drawEdge(ctx, originNode, targetNode) {
   canvasDrawEdge(ctx, {
     a: {
-      x: originNode.pos[0],
-      y: originNode.pos[1],
+      x: originNode.position[0],
+      y: originNode.position[1],
     },
     b: {
-      x: targetNode.pos[0],
-      y: targetNode.pos[1],
+      x: targetNode.position[0],
+      y: targetNode.position[1],
     },
     color: "black",
   });
@@ -89,12 +89,12 @@ function drawEdge(ctx, originNode, targetNode) {
 function drawHighlightedEdge(ctx, originNode, targetNode) {
   canvasDrawEdge(ctx, {
     a: {
-      x: originNode.pos[0],
-      y: originNode.pos[1],
+      x: originNode.position[0],
+      y: originNode.position[1],
     },
     b: {
-      x: targetNode.pos[0],
-      y: targetNode.pos[1],
+      x: targetNode.position[0],
+      y: targetNode.position[1],
     },
     color: "purple",
   });

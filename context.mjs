@@ -62,7 +62,7 @@ export function getNode(position) {
     rxjs.operators.take(1),
     rxjs.operators.map((graph) =>
       graph.nodes.findIndex((node) => {
-        const [x, y] = node.pos;
+        const [x, y] = node.position;
 
         return isWithin(
           [

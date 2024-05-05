@@ -68,11 +68,12 @@ export function handleChangeMode(mode) {
   Ctx().$mode.next(mode);
 }
 
-export function handleClear(graph) {
+export function handleClear() {
   handleChangeMode(MODE.SANDBOX);
   Ctx().$graph.next({ nodes: [], matrix: [] });
   Ctx().$algorithm.next(null);
   Ctx().$originNode.next(null);
+  localStorage.removeItem(LOCAL_STORAGE_KEY);
 }
 
 export function onModeChange(mode) {
@@ -184,7 +185,7 @@ export function handleSandboxModeClick(payload) {
         const type = payload.altKey ? NODE_TYPE.FINAL : NODE_TYPE.NORMAL;
 
         Ctx().$originNode.next(null);
-        Ctx().addNode({ type, pos: position });
+        Ctx().addNode({ type, position });
       }
     });
 }

@@ -19,7 +19,7 @@ export function addEdge(matrix, edge) {
 
 export function getNode(nodes, pos) {
   return nodes.findIndex((node) => {
-    const [x, y] = node.pos;
+    const [x, y] = node.position;
 
     return isWithin(
       [
