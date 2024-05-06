@@ -5,6 +5,11 @@ export const getAll = () => {
     { id: "dfs", name: "Depth First Search (DFS)", handle: algorithms.dfs },
     { id: "bfs", name: "Breadth First Search (BFS)", handle: algorithms.bfs },
     {
+      id: "dijkstra-algorithm",
+      name: "Dijkstra's Algorithm",
+      handle: algorithms.dijkstra,
+    },
+    {
       id: "best-first-search",
       name: "Best First Search",
       handle: algorithms.bestFirstSearch,

@@ -44,13 +44,9 @@ export class PriorityQueue {
   add(item) {
     let i = 0;
 
-    while (i < this.#items.length && this.#items[i].weight > item.weight) {
-      i++;
-    }
+    while (i < this.#items.length && this.#items[i].weight > item.weight) i++;
 
-    for (let j = this.#items.length; j > i; j--) {
-      swap(this.#items, j, j - 1);
-    }
+    for (let j = this.#items.length; j > i; j--) swap(this.#items, j, j - 1);
 
     this.#items[i] = item;
   }
@@ -59,6 +55,24 @@ export class PriorityQueue {
   pop() {
     if (this.empty()) return null;
     return this.#items.pop();
+  }
+
+  setMinWeight(item, weight) {
+    const itemIdx = this.#items.findIndex((it) => it.item === item);
+
+    if (itemIdx === -1) return;
+    if (this.#items[itemIdx].weight < weight) return false;
+
+    this.#items[itemIdx].weight = weight;
+
+    while (
+      itemIdx < this.#items.length - 1 &&
+      this.#items[itemIdx].weight < this.#items[itemIdx + 1].weight
+    ) {
+      swap(this.#items, itemIdx, itemIdx + 1);
+    }
+
+    return true;
   }
 
   /** @return {boolean}  */

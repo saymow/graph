@@ -1,5 +1,5 @@
 import { NODE_TYPE } from "./constants.mjs";
-import { getDistance, PriorityQueue } from "./utils.mjs";
+import { computePathDistance, getDistance, PriorityQueue } from "./utils.mjs";
 
 const computeHTable = (nodes) => {
   const finalNodes = nodes.filter((node) => node.type === NODE_TYPE.FINAL);
@@ -30,7 +30,6 @@ export const bfs = (nodes, matrix, originIdx, onDiscover, onVisit, onFind) => {
   const discovered = new Array(nodes.length).fill(0);
   const order = new Array(nodes.length).fill(-1);
   const queue = [originIdx];
-  const path = [];
   let iterations = 0;
   let nodeIdx;
 
@@ -132,6 +131,59 @@ export const bestFirstSearch = (
   }
 
   return { path: computePath(order, nodeIdx), iterations };
+};
+
+export const dijkstra = (
+  nodes,
+  matrix,
+  originIdx,
+  onDiscover,
+  onVisit,
+  onFind
+) => {
+  const visited = new Array(nodes.length).fill(0);
+  const discovered = new Array(nodes.length).fill(0);
+  const order = new Array(nodes.length).fill(-1);
+  const priorityQueue = new PriorityQueue([{ item: originIdx, weight: 0 }]);
+  let iterations = 0;
+  let currentNodeIdx;
+
+  visited[originIdx] = 1;
+
+  while (!priorityQueue.empty()) {
+    iterations++;
+    const currentNode = priorityQueue.pop();
+    currentNodeIdx = currentNode.item;
+
+    onVisit(currentNodeIdx);
+
+    if (nodes[currentNodeIdx].type === NODE_TYPE.FINAL) {
+      onFind(currentNodeIdx);
+      break;
+    }
+
+    for (let idx = 0; idx < matrix.length; idx++) {
+      if (matrix[currentNodeIdx][idx] === 0 || visited[idx] === 1) continue;
+
+      const weight =
+        currentNode.weight +
+        getDistance(nodes[currentNodeIdx].position, nodes[idx].position);
+
+      if (discovered[idx] === 0) {
+        priorityQueue.add({ item: idx, weight });
+
+        discovered[idx] = 1;
+        onDiscover(idx);
+        order[idx] = currentNodeIdx;
+      } else if (priorityQueue.setMinWeight(idx, weight)) {
+        order[idx] = currentNodeIdx;
+      }
+    }
+
+    visited[currentNodeIdx] = 1;
+  }
+
+  return { path: computePath(order, currentNodeIdx), iterations };
 };
 
 export const AStar = (
