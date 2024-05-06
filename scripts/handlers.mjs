@@ -88,8 +88,16 @@ export function handleClick(data) {
 }
 
 export function handleLoad() {
-  const config = JSON.parse(window.prompt("Enter graph: "));
-  Ctx().$graph.next(config);
+  try {
+    const json = window.prompt("Enter graph: ");
+
+    if (json === null) return;
+
+    const config = JSON.parse(json);
+    Ctx().$graph.next(config);
+  } catch {
+    window.alert("Invalid JSON!");
+  }
 }
 
 export function handleSave(graph) {
