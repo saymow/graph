@@ -206,6 +206,8 @@ export const bellmanFord = (
   onDiscover(originIdx);
 
   for (const node of matrix) {
+    let distanceUpdated = false;
+
     for (let i = 0; i < matrix.length; i++) {
       for (let j = 0; j < matrix.length; j++) {
         if (matrix[i][j] === 1) {
@@ -215,6 +217,7 @@ export const bellmanFord = (
             distances[i] + getDistance(nodes[i].position, nodes[j].position);
 
           if (distance < distances[j]) {
+            distanceUpdated = true;
             distances[j] = distance;
             order[j] = i;
           }
@@ -225,6 +228,8 @@ export const bellmanFord = (
         }
       }
     }
+
+    if (!distanceUpdated) break;
   }
 
   let finalNodeIdx = -1;
