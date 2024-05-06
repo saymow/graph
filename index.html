@@ -29,92 +29,100 @@
         <button id="load-preset-btn">Load preset</button>
       </header>
     </div>
-    <div class="modal-container" id="tutorial-modal-container">
+    <div class="modal-container open" id="tutorial-modal-container">
       <section id="tutorial-modal" class="modal">
-        <h1>TUTORIAL</h1>
-        <article class="modes-tutorial-container">
-          <section class="mode-controls">
-            <button id="sandbox-btn" data-id="sandbox" highlight>
-              Sandbox
-            </button>
-            <button id="run-btn" data-id="run">Run</button>
-            <button id="comparissons-btn" data-id="comparisson">
-              Comparisson
-            </button>
-          </section>
-          <section
-            id="comparisson-mode-doc"
-            data-id="comparisson"
-            class="mode-tutorial"
-          >
-            <img
-              src="media/comparisson-mode.gif"
-              alt="Video of comparisson mode in use"
-            />
-          </section>
-          <section id="run-mode-doc" data-id="run" class="mode-tutorial hidden">
-            <img src="media/run-mode.gif" alt="Video of run mode in use" />
-          </section>
-          <section
-            id="sandbox-mode-doc"
-            data-id="sandbox"
-            class="mode-tutorial hidden"
-          >
-            <img
-              src="media/sandbox-mode.gif"
-              alt="Video of Sandbox mode in use"
-            />
-            <p><strong>Click</strong>: Create a basic node.</p>
-            <p><strong>Alt + Click</strong>: Create a final node.</p>
-            <p>
-              <strong>Ctrl + Click</strong>: Select a node. When two nodes is
-              selected in sequence, an edge is created between them.
-            </p>
-          </section>
-        </article>
-        <article class="additional-tutorial-container">
-          <h2>NODES</h2>
-          <section class="node-doc">
-            <span class="node basic"></span>
-            <p>Basic node</p>
-          </section>
+        <header><h1>TUTORIAL</h1></header>
+        <div class="tutorial-container">
+          <article class="modes-tutorial-container">
+            <h2>MODE</h2>
+            <section class="mode-controls">
+              <button id="sandbox-btn" data-id="sandbox" highlight>
+                Sandbox
+              </button>
+              <button id="run-btn" data-id="run">Run</button>
+              <button id="comparissons-btn" data-id="comparisson">
+                Comparisson
+              </button>
+            </section>
 
-          <section class="node-doc">
-            <span class="node discovered"></span>
-            <p>Discovered node</p>
-          </section>
-          <section class="node-doc">
-            <span class="node visited"></span>
-            <p>Visited node</p>
-          </section>
-          <section class="node-doc">
-            <span class="node path"></span>
-            <p>Path node</p>
-          </section>
-          <section class="node-doc">
-            <span class="node final">0</span>
-            <p>Final node</p>
-          </section>
-        </article>
-        <article class="additional-tutorial-container">
-          <h2>ADDITIONAL</h2>
-          <section class="button-doc">
-            <button>Clear</button>
-            <p>Start new graph</p>
-          </section>
-          <section class="button-doc">
-            <button>Save</button>
-            <p>Save the graph locally and on the <strong>CTRL + V</strong></p>
-          </section>
-          <section class="button-doc">
-            <button>Load</button>
-            <p>Load a graph from a JSON previosly saved</p>
-          </section>
-          <section class="button-doc">
-            <button>Load Preset</button>
-            <p>Load the initial graph</p>
-          </section>
-        </article>
+            <section
+              id="sandbox-mode-doc"
+              data-id="sandbox"
+              class="mode-tutorial"
+            >
+              <img
+                src="media/sandbox-mode.gif"
+                alt="Video of Sandbox mode in use"
+              />
+              <p><strong>Click</strong>: Create a basic node.</p>
+              <p><strong>Alt + Click</strong>: Create a final node.</p>
+              <p>
+                <strong>Ctrl + Click</strong>: Select a node. When two nodes is
+                selected in sequence, an edge is created between them.
+              </p>
+            </section>
+            <section
+              id="run-mode-doc"
+              data-id="run"
+              class="mode-tutorial hidden"
+            >
+              <img src="media/run-mode.gif" alt="Video of run mode in use" />
+            </section>
+            <section
+              id="comparisson-mode-doc"
+              data-id="comparisson"
+              class="mode-tutorial hidden"
+            >
+              <img
+                src="media/comparisson-mode.gif"
+                alt="Video of comparisson mode in use"
+              />
+            </section>
+          </article>
+          <article class="additional-tutorial-container">
+            <h2>NODES</h2>
+            <section class="node-doc">
+              <span class="node basic"></span>
+              <p>Basic node</p>
+            </section>
+
+            <section class="node-doc">
+              <span class="node discovered"></span>
+              <p>Discovered node</p>
+            </section>
+            <section class="node-doc">
+              <span class="node visited"></span>
+              <p>Visited node</p>
+            </section>
+            <section class="node-doc">
+              <span class="node path"></span>
+              <p>Path node</p>
+            </section>
+            <section class="node-doc">
+              <span class="node final">0</span>
+              <p>Final node</p>
+            </section>
+          </article>
+          <article class="additional-tutorial-container">
+            <h2>ADDITIONAL</h2>
+            <section class="button-doc">
+              <button>Clear</button>
+              <p>Start new graph</p>
+            </section>
+            <section class="button-doc">
+              <button>Save</button>
+              <p>Save the graph locally and on the <strong>CTRL + V</strong></p>
+            </section>
+            <section class="button-doc">
+              <button>Load</button>
+              <p>Load a graph from a JSON previosly saved</p>
+            </section>
+            <section class="button-doc">
+              <button>Load Preset</button>
+              <p>Load the initial graph</p>
+            </section>
+          </article>
+        </div>
       </section>
     </div>
     <div class="modal-container" id="algorithm-modal-container">
@@ -149,7 +157,7 @@
     </div>
     <div class="modal-container" id="algorithm-comparissons-modal-container">
       <section id="algorithm-comparissons-modal" class="modal">
-        <h1>algorithm comparissons</h1>
+        <header><h1>algorithm comparissons</h1></header>
         <ul data-id="algorithm-metrics"></ul>
       </section>
     </div>
