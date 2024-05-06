@@ -15,6 +15,8 @@ const computeHTable = (nodes) => {
 };
 
 const computePath = (order, lastNodeIdx) => {
+  if (lastNodeIdx === -1) return [];
+
   const path = [];
   let idx = lastNodeIdx;
 
@@ -184,6 +186,68 @@ export const dijkstra = (
   }
 
   return { path: computePath(order, currentNodeIdx), iterations };
+};
+
+export const bellmanFord = (
+  nodes,
+  matrix,
+  originIdx,
+  onDiscover,
+  onVisit,
+  onFind
+) => {
+  const discovered = new Array(nodes.length).fill(0);
+  const order = new Array(nodes.length).fill(-1);
+  const distances = new Array(nodes.length).fill(Infinity);
+  let iterations = 0;
+
+  distances[originIdx] = 0;
+  discovered[originIdx] = 1;
+  onDiscover(originIdx);
+
+  for (const node of matrix) {
+    for (let i = 0; i < matrix.length; i++) {
+      for (let j = 0; j < matrix.length; j++) {
+        if (matrix[i][j] === 1) {
+          iterations++;
+
+          const distance =
+            distances[i] + getDistance(nodes[i].position, nodes[j].position);
+
+          if (distance < distances[j]) {
+            distances[j] = distance;
+            order[j] = i;
+          }
+          if (discovered[j] === 0) {
+            discovered[j] = 1;
+            onDiscover(j);
+          }
+        }
+      }
+    }
+  }
+
+  let finalNodeIdx = -1;
+  let finalNodeDistance = Infinity;
+
+  for (let idx = 0; idx < nodes.length; idx++) {
+    if (nodes[idx].type === NODE_TYPE.FINAL) {
+      const path = computePath(order, idx);
+
+      if (path.length && path[path.length - 1] === originIdx) {
+        const distance = computePathDistance(path.map((i) => nodes[i]));
+
+        onFind(idx);
+
+        if (distance < finalNodeDistance) {
+          finalNodeIdx = idx;
+          finalNodeDistance = distance;
+        }
+      }
+    }
+  }
+
+  return { path: computePath(order, finalNodeIdx), iterations };
 };
 
 export const AStar = (

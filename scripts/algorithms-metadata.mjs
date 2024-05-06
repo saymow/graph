@@ -10,6 +10,11 @@ export const getAll = () => {
       handle: algorithms.dijkstra,
     },
     {
+      id: "bellman-ford-algorithm",
+      name: "Bellman-Ford Algorithm",
+      handle: algorithms.bellmanFord,
+    },
+    {
       id: "best-first-search",
       name: "Best First Search",
       handle: algorithms.bestFirstSearch,

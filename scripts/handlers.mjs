@@ -337,6 +337,10 @@ export function handleCloseResultsModal() {
 }
 
 export function getPathInformation(nodes, path) {
+  if (path.length === 0) {
+    return { finalNode: -1, nodesCount: -1, distance: -1 };
+  }
+
   const finalNode = nodes[path[0]];
 
   if (finalNode.type === NODE_TYPE.NORMAL) {
