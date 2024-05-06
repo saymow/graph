@@ -137,6 +137,7 @@ Ctx()
         rxjs.operators.take(1),
         rxjs.operators.map((graph) => ({
           path: event.payload.path,
+          iterations: event.payload.iterations,
           graph,
           algorithm,
         }))
@@ -234,6 +235,7 @@ rxjs
         (buttonEl) => buttonEl.contains(e.target)
       )
     ),
+    rxjs.operators.filter((exists) => !!exists),
     rxjs.operators.takeWhile(() =>
       Ctx().tutorialModalContainerEl.classList.contains("open")
     ),

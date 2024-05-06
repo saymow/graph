@@ -5,11 +5,16 @@ export const makeOptionEl = (algorithm) => {
   buttonEl.textContent = algorithm.name;
   buttonEl.setAttribute("data-id", algorithm.id);
   liEl.appendChild(buttonEl);
-  
+
   return liEl;
 };
 
-export const makeAlgorithmInformationEl = (algorithm, info, handleRunClick) => {
+export const makeAlgorithmInformationEl = (
+  algorithm,
+  info,
+  iterations,
+  handleRunClick
+) => {
   const liEl = document.createElement("li");
   const articleEl = document.createElement("article");
   const headerEl = document.createElement("header");
@@ -24,6 +29,9 @@ export const makeAlgorithmInformationEl = (algorithm, info, handleRunClick) => {
   const finalNodeArticleEl = document.createElement("article");
   const finalNodeArticleKeyEl = document.createElement("span");
   const finalNodeArticleValueEl = document.createElement("span");
+  const iterationsArticleEl = document.createElement("article");
+  const iterationsArticleKeyEl = document.createElement("span");
+  const iterationsArticleValueEl = document.createElement("span");
   const runArticleEl = document.createElement("article");
   const nodesArticleBtnEl = document.createElement("button");
 
@@ -46,6 +54,11 @@ export const makeAlgorithmInformationEl = (algorithm, info, handleRunClick) => {
   finalNodeArticleEl.appendChild(finalNodeArticleKeyEl);
   finalNodeArticleEl.appendChild(finalNodeArticleValueEl);
 
+  iterationsArticleKeyEl.textContent = "Iterations";
+  iterationsArticleValueEl.textContent = iterations;
+  iterationsArticleEl.appendChild(iterationsArticleKeyEl);
+  iterationsArticleEl.appendChild(iterationsArticleValueEl);
+
   nodesArticleBtnEl.textContent = "Run";
   nodesArticleBtnEl.setAttribute("data-id", algorithm.id);
   nodesArticleBtnEl.addEventListener("click", handleRunClick);
@@ -56,6 +69,7 @@ export const makeAlgorithmInformationEl = (algorithm, info, handleRunClick) => {
   sectionEl.appendChild(nodesArticleEl);
   sectionEl.appendChild(distanceArticleEl);
   sectionEl.appendChild(finalNodeArticleEl);
+  sectionEl.appendChild(iterationsArticleEl);
   sectionEl.appendChild(runArticleEl);
 
   articleEl.appendChild(headerEl);

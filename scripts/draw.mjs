@@ -87,17 +87,21 @@ function drawEdge(ctx, originNode, targetNode) {
 }
 
 function drawHighlightedEdge(ctx, originNode, targetNode) {
-  canvasDrawEdge(ctx, {
-    a: {
-      x: originNode.position[0],
-      y: originNode.position[1],
+  canvasDrawEdge(
+    ctx,
+    {
+      a: {
+        x: originNode.position[0],
+        y: originNode.position[1],
+      },
+      b: {
+        x: targetNode.position[0],
+        y: targetNode.position[1],
+      },
+      color: "purple",
     },
-    b: {
-      x: targetNode.position[0],
-      y: targetNode.position[1],
-    },
-    color: "purple",
-  });
+    3
+  );
 }
 
 export function drawHighlightedNode(ctx, nodes, node) {

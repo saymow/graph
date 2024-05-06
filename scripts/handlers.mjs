@@ -145,7 +145,7 @@ export function handleRunAlgorithmPresentation(payload) {
 
   draw.drawHighlightedNode(Ctx().canvasCtx, nodes, origin);
 
-  const path = algorithm.handle(
+  const { path, iterations } = algorithm.handle(
     nodes,
     matrix,
     targetIdx,
@@ -191,7 +191,7 @@ export function handleRunAlgorithmPresentation(payload) {
 
   Ctx().$algorithmPresentation.next({
     type: RUN_EVENT_TYPE.END,
-    payload: { path },
+    payload: { path, iterations },
   });
 }
 
@@ -245,7 +245,7 @@ export function handleComparissonMode(payload) {
 
   containerEl.innerHTML = "";
   algorithms.getAll().forEach((algorithm) => {
-    const path = algorithm.handle(
+    const { path, iterations } = algorithm.handle(
       nodes,
       matrix,
       targetIdx,
@@ -258,6 +258,7 @@ export function handleComparissonMode(payload) {
       elements.makeAlgorithmInformationEl(
         algorithm,
         getPathInformation(nodes, path),
+        iterations,
         handleComparissonAlgorithmClick
       )
     );
@@ -351,7 +352,7 @@ export function getPathInformation(nodes, path) {
 }
 
 export function handleOpenResultModal(payload) {
-  const { path, graph, algorithm } = payload;
+  const { path, iterations, graph, algorithm } = payload;
   const { finalNode, nodesCount, distance } = getPathInformation(
     graph.nodes,
     path
@@ -366,6 +367,9 @@ export function handleOpenResultModal(payload) {
   Ctx().resultModalContainerEl.querySelector(
     '[data-id="final-node"]'
   ).textContent = finalNode;
+  Ctx().resultModalContainerEl.querySelector(
+    '[data-id="iterations"]'
+  ).textContent = iterations;
   Ctx().resultModalContainerEl.classList.add("open");
 
   rxjs

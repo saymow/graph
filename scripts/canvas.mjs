@@ -43,11 +43,13 @@ export function drawCircle(ctx, circle) {
 /**
  * @param {CanvasRenderingContext2D} ctx
  * @param {Edge} edge
+ * @param {number?} thickness
  */
-export function drawEdge(ctx, edge) {
+export function drawEdge(ctx, edge, thickness = 1) {
   ctx.moveTo(edge.a.x, edge.a.y);
   ctx.lineTo(edge.b.x, edge.b.y);
   ctx.strokeStyle = edge.color;
+  ctx.lineWidth = thickness;
   ctx.strokeWidth = 100;
   ctx.lineCap = "round";
   ctx.stroke();
