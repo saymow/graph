@@ -1,6 +1,7 @@
 export const sumDistance = (node, finalNodes) => {
-  return finalNodes.reduce((finalNode) =>
-    getDistance(node.position, finalNode.position)
+  return finalNodes.reduce(
+    (acc, finalNode) => acc + getDistance(node.position, finalNode.position),
+    0
   );
 };
 
@@ -12,7 +13,6 @@ export const minDistance = (node, finalNodes) => {
   return Math.min(...distances);
 };
 
-
 export const maxDistance = (node, finalNodes) => {
   let distances = finalNodes.map((finalNode) =>
     getDistance(node.position, finalNode.position)
@@ -20,7 +20,6 @@ export const maxDistance = (node, finalNodes) => {
 
   return Math.max(...distances);
 };
-
 
 export const avgDistance = (node, finalNodes) => {
   if (finalNodes.length === 0) return 0;
